@@ -194,4 +194,174 @@ export class ShipmentsService {
       { label: 'Cancelado', value: 'cancelado' }
     ];
   }
+
+  async getDriverShipments(userId: string) {
+    // Buscar el colaborador asociado al usuario por user_id
+    const colaborador = await this.knex('logistica_colaboradores')
+      .where('user_id', userId)
+      .first();
+
+    if (!colaborador) {
+      return [];
+    }
+
+    return this.knex('logistica_embarques')
+      .leftJoin('logistica_unidades', 'logistica_embarques.unidad_id', 'logistica_unidades.id')
+      .leftJoin('logistica_colaboradores as chofer', 'logistica_embarques.operador_id', 'chofer.id')
+      .leftJoin('logistica_guias', 'logistica_embarques.id', 'logistica_guias.embarque_id')
+      .where('logistica_embarques.operador_id', colaborador.id)
+      .whereNotIn('logistica_embarques.estado', ['completado', 'cancelado'])
+      .select(
+        'logistica_embarques.id',
+        'logistica_embarques.folio',
+        'logistica_embarques.fecha',
+        'logistica_embarques.origen',
+        'logistica_embarques.destino_texto as destino',
+        'logistica_embarques.estado',
+        'logistica_unidades.placa as unidad_placa',
+        'chofer.nombre as chofer_nombre',
+        'logistica_guias.id as guia_id',
+        'logistica_guias.tipo as guia_tipo',
+        'logistica_guias.estado as guia_estado'
+      )
+      .orderBy('fecha', 'desc');
+  }
+
+  // ========== MÉTODOS DE TRANSICIÓN DE ESTADOS ==========
+
+  async iniciarChecklistSalida(embarqueId: string, choferId: string) {
+    // Validar que el embarque esté en estado programado
+    const embarque = await this.findOne(embarqueId);
+    if (embarque.estado !== 'programado') {
+      throw new Error('El embarque no está en estado programado');
+    }
+
+    // Actualizar estado
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'checklist_salida',
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'checklist_salida' };
+  }
+
+  async confirmarSalida(embarqueId: string, checklistId: string) {
+    // Validar que el checklist de salida esté completado
+    const checklist = await this.knex('logistica_checklists')
+      .where('id', checklistId)
+      .first();
+
+    if (!checklist || !checklist.completado) {
+      throw new Error('El checklist de salida no está completado');
+    }
+
+    // Actualizar estado a en_transito
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'en_transito',
+        fecha_salida: new Date(),
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'en_transito' };
+  }
+
+  async subirFotosEntrega(embarqueId: string) {
+    // Validar que esté en_transito
+    const embarque = await this.findOne(embarqueId);
+    if (embarque.estado !== 'en_transito') {
+      throw new Error('El embarque no está en tránsito');
+    }
+
+    // Actualizar estado
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'fotos_entrega',
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'fotos_entrega' };
+  }
+
+  async confirmarEntrega(embarqueId: string) {
+    // Validar que haya fotos subidas
+    const fotos = await this.knex('logistica_fotos_entrega')
+      .where('embarque_id', embarqueId)
+      .whereIn('tipo', ['entrega_firmada', 'ine_receptor']);
+
+    if (fotos.length < 2) {
+      throw new Error('Debe subir la foto de la entrega firmada y la INE del receptor');
+    }
+
+    // Actualizar estado
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'checklist_llegada',
+        fecha_llegada: new Date(),
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'checklist_llegada' };
+  }
+
+  async completarChecklistLlegada(embarqueId: string, checklistId: string) {
+    // Validar que el checklist de llegada esté completado
+    const checklist = await this.knex('logistica_checklists')
+      .where('id', checklistId)
+      .first();
+
+    if (!checklist || !checklist.completado) {
+      throw new Error('El checklist de llegada no está completado');
+    }
+
+    // Actualizar estado a costos_pendientes (que usa el módulo de costs existente)
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'costos_pendientes',
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'costos_pendientes' };
+  }
+
+  async finalizarEmbarque(embarqueId: string) {
+    // Validar que esté en costos_pendientes
+    const embarque = await this.findOne(embarqueId);
+    if (embarque.estado !== 'costos_pendientes') {
+      throw new Error('El embarque no tiene costos pendientes');
+    }
+
+    // Verificar que existan costos registrados
+    const costos = await this.knex('logistica_costos')
+      .where('embarque_id', embarqueId)
+      .first();
+
+    if (!costos) {
+      throw new Error('No se han generado costos para este embarque');
+    }
+
+    // Actualizar estado a completado
+    await this.knex('logistica_embarques')
+      .where('id', embarqueId)
+      .update({
+        estado: 'completado',
+        updated_at: new Date(),
+      });
+
+    // También marcar la guía como completada
+    await this.knex('logistica_guias')
+      .where('embarque_id', embarqueId)
+      .update({
+        estado: 'completada',
+        updated_at: new Date(),
+      });
+
+    return { success: true, estado: 'completado' };
+  }
 }

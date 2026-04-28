@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from '../shared/database/database.module';
 import { StaffModule } from './modules/staff/staff.module';
 import { FleetModule } from './modules/fleet/fleet.module';
@@ -8,7 +9,10 @@ import { ShipmentsModule } from './modules/shipments/shipments.module';
 import { GuidesModule } from './modules/guides/guides.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { CostsModule } from './modules/costs/costs.module';
+import { ChecklistsModule } from './modules/checklists/checklists.module';
+import { FotosModule } from './modules/fotos/fotos.module';
 import { AuthModule } from './auth/auth.module';
+import { CronModule } from '../modules/cron/cron.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -17,6 +21,7 @@ import { AppService } from './app.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     StaffModule,
     FleetModule,
@@ -25,7 +30,10 @@ import { AppService } from './app.service';
     GuidesModule,
     ReportsModule,
     CostsModule,
+    ChecklistsModule,
+    FotosModule,
     AuthModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [AppService],
