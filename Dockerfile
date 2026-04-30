@@ -1,69 +1,98 @@
-# --- Stage 1: Build Stage ---
-FROM node:20 AS builder
+# ============================================================
+# STAGE 1: Dependencias — compartido por todos
+# ============================================================
+FROM node:20.12.2-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json .npmrc ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --frozen-lockfile --legacy-peer-deps
+
+
+# ============================================================
+# STAGE 2: Build ALL apps — un solo nx build para todo
+# ============================================================
+FROM node:20.12.2-alpine AS builder
 WORKDIR /app
 
-# Configuración base para Nx y NPM (sin el cargador aún)
 ENV NX_DAEMON=false \
     CI=true \
     NODE_OPTIONS="--max-old-space-size=4096"
 
-# Copiamos archivos de dependencias y configuraciones base
-COPY package*.json .npmrc tsconfig.base.json nx.json load-compiler.mjs ./
-
-# Instalamos dependencias (esto corre sin el cargador para evitar ERR_MODULE_NOT_FOUND)
-RUN npm install
-
-# Copiamos el resto del código fuente
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Compilamos las aplicaciones usando el cargador global SOLO en este paso
-RUN NODE_OPTIONS="--max-old-space-size=4096 --import file:///app/load-compiler.mjs" npx nx build view --prod && \
-    NODE_OPTIONS="--max-old-space-size=4096 --import file:///app/load-compiler.mjs" npx nx build api --prod
+RUN --mount=type=cache,target=/app/.nx/cache \
+    NODE_OPTIONS="--max-old-space-size=4096 --import file:///app/load-compiler.mjs" \
+    npx nx run-many --target=build --projects=view,api,logistica-view,logistica-api --parallel=4 --configuration=production
 
-# --- Stage 2: Production dependencies ---
-FROM node:20 AS prod-deps
+
+# ============================================================
+# STAGE 3: Prod node_modules — compartido por apis
+# ============================================================
+FROM node:20.12.2-alpine AS prod-deps
 WORKDIR /app
-COPY package*.json .npmrc ./
-# Instalamos solo dependencias de producción
-RUN npm install --omit=dev
+COPY package.json package-lock.json .npmrc ./
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --omit=dev --frozen-lockfile --legacy-peer-deps
 
-# --- Stage 3: Final Image (Ultra Optimized) ---
-FROM node:20-slim AS runner
 
-# Instalamos nginx y gettext-base (necesario para envsubst en start.sh)
+# ============================================================
+# TARGET: main-app  (view + api + nginx juntos)
+# Railway: docker build --target main-app .
+# ============================================================
+FROM node:20.12.2-slim AS main-app
+
 RUN apt-get update && apt-get install -y nginx gettext-base && \
     rm -rf /var/lib/apt/lists/*
 
-
 WORKDIR /app
-
-# Variables de entorno para producción
-# API_PORT: puerto interno fijo del backend NestJS (siempre 3333)
-# PORT:     es inyectado por Render en tiempo de ejecución (ej. 10000 o 3000)
-#           Nginx escucha en él. NO coincidir con API_PORT.
 ENV NODE_ENV=production \
     API_PORT=3333 \
     API_PREFIX=api
 
-# Copiamos todo lo necesario desde los stages previos
+COPY --from=builder /app/dist/apps/view ./dist/apps/view
+COPY --from=builder /app/dist/apps/api ./dist/apps/api
 COPY --from=builder /app/database ./database
-COPY --from=builder /app/dist ./dist
 COPY --from=prod-deps /app/node_modules ./node_modules
 
-# Copiamos configuración de Nginx y script de inicio
-# Nota: La ruta de Nginx en debian-slim suele ser /etc/nginx/sites-available/default o /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/sites-available/default
 COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
-# Aseguramos que el frontend se sirve desde la ruta configurada en nginx.conf
-# Angular v17+ compila usualmente a dist/apps/view/browser
 RUN mkdir -p /usr/share/nginx/html && \
-    cp -r dist/apps/view/browser/* /usr/share/nginx/html/ || \
-    cp -r dist/apps/view/* /usr/share/nginx/html/
+    cp -r dist/apps/view/browser/* /usr/share/nginx/html/
 
-# Render usa PORT dinámico (normalmente 10000); exponemos ese como hint
 EXPOSE 10000
+CMD ["./start.sh"]
 
-# El comando de inicio coordina migraciones, seeds, api y nginx
-CMD ["sh", "./start.sh"]
+
+# ============================================================
+# TARGET: logistica-view  (Angular estático en nginx)
+# Railway: docker build --target logistica-view .
+# ============================================================
+FROM nginx:1.27-alpine AS logistica-view
+
+COPY --from=builder /app/dist/apps/logistica-view/browser /usr/share/nginx/html
+COPY apps/logistica-view/nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+
+
+# ============================================================
+# TARGET: logistica-api  (NestJS)
+# Railway: docker build --target logistica-api .
+# ============================================================
+FROM node:20.12.2-alpine AS logistica-api
+
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist/apps/logistica-api ./dist
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 3000
+CMD ["node", "dist/main.js"]
