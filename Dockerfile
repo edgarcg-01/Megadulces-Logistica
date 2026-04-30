@@ -4,8 +4,8 @@
 FROM node:20.12.2-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --frozen-lockfile --legacy-peer-deps
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+    npm ci
 
 
 # ============================================================
@@ -21,9 +21,8 @@ ENV NX_DAEMON=false \
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN --mount=type=cache,target=/app/.nx/cache \
-    NODE_OPTIONS="--max-old-space-size=4096 --import file:///app/load-compiler.mjs" \
-    npx nx run-many --target=build --projects=view,api,logistica-view,logistica-api --parallel=4 --configuration=production
+RUN --mount=type=cache,id=nx-cache,target=/app/.nx/cache \
+    npm run build
 
 
 # ============================================================
@@ -32,8 +31,8 @@ RUN --mount=type=cache,target=/app/.nx/cache \
 FROM node:20.12.2-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev --frozen-lockfile --legacy-peer-deps
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+    npm ci --omit=dev
 
 
 # ============================================================
