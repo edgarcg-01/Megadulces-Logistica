@@ -91,8 +91,15 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist/apps/logistica-api ./dist
 COPY --from=builder /app/dist/apps/logistica-view/browser ./public
 
+COPY --from=builder /app/package.json ./package.json
+
+# Copy database & script for migrations
+COPY database ./database
+COPY start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["sh", "./start.sh"]

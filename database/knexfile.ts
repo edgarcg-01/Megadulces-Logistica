@@ -14,12 +14,15 @@ export const connectionConfig: { [key: string]: Knex.Config } = {
   },
   production: {
     client: 'pg',
-    connection: {
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      database: process.env.DB_NAME || 'megadulces_logistica',
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+    connection: process.env.DATABASE_URL ? {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    } : {
+      host: process.env.DB_HOST || process.env.PGHOST,
+      port: Number(process.env.DB_PORT || process.env.PGPORT) || 5432,
+      database: process.env.DB_NAME || process.env.PGDATABASE || 'megadulces_logistica',
+      user: process.env.DB_USER || process.env.PGUSER,
+      password: process.env.DB_PASSWORD || process.env.PGPASSWORD,
       ssl: { rejectUnauthorized: false },
     },
     pool: { min: 2, max: 10 },
