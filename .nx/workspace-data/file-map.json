@@ -55,400 +55,400 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": "database/migrations/20260429000000_add_roles_to_users.js",
-        "hash": "7731176087764908206"
-      },
-      {
-        "file": "database/migrations/20260427000003_fix_checklists_fotos_foreign_keys_v2.js",
-        "hash": "17086381791522967126"
-      },
-      {
-        "file": "package-lock.json",
-        "hash": "10716395664713248323"
-      },
-      {
-        "file": "database/seeds/01h_test_users_endpoint.js",
-        "hash": "1184646372494453535"
-      },
-      {
-        "file": "docker-compose.prod.yml",
-        "hash": "1938083618851943586"
-      },
-      {
-        "file": "database/migrations/20260414220001_add_score_maximo_to_config_versions.js",
-        "hash": "5769448018101356473"
-      },
-      {
-        "file": "database/migrations/20260414130000_fix_supervisor_id_production.js",
-        "hash": "9686040481709306062"
-      },
-      {
-        "file": "database/knexfile.ts",
-        "hash": "12010299251498169420"
-      },
-      {
-        "file": "database/migrations/20260330165446_20260330_init_scoring_schema.js",
-        "hash": "6479812992078546234"
-      },
-      {
-        "file": "database/migrations/20260331231959_add_gps_to_captures.js",
-        "hash": "9562049285079356973"
-      },
-      {
-        "file": ".github/workflows/deploy.yml",
-        "hash": "14759475886759361421"
-      },
-      {
-        "file": "database/migrations/20260402160000_update_assignments_to_weekly.js",
-        "hash": "14452574582107848075"
-      },
-      {
-        "file": "database/migrations/20260330165442_20260330_init_captures_schema.js",
-        "hash": "804792513858306976"
-      },
-      {
-        "file": "database/migrations/20260401000000_v4_rename_planograma_to_planograms.js",
-        "hash": "12883015568955079618"
-      },
-      {
-        "file": "database/migrations/20250428140000_fix_fotos_missing_columns.js",
-        "hash": "10689910822580822645"
-      },
-      {
-        "file": "nginx.conf",
-        "hash": "17936468969436158907"
+        "file": "README.md",
+        "hash": "9278998110682614562"
       },
       {
         "file": "database/migrations/20250428130003_recreate_chofer_id.js",
         "hash": "14986855030333544972"
       },
       {
-        "file": "database/migrations/20260331000000_v2_daily_captures_schema.js",
-        "hash": "15696643244356592832"
+        "file": "database/migrations/20260331231959_add_gps_to_captures.js",
+        "hash": "9562049285079356973"
       },
       {
-        "file": "database/migrations/20260330165444_20260330_init_planograma_schema.js",
-        "hash": "910734349432654109"
+        "file": "database/seeds/01h_test_users_endpoint.js",
+        "hash": "1184646372494453535"
       },
       {
-        "file": "eslint.config.js",
-        "hash": "2478217381773231556"
-      },
-      {
-        "file": "database/seeds/01e_logistica_embarques.js",
-        "hash": "8411341162076969865"
-      },
-      {
-        "file": "database/seeds/01c_logistica_colaboradores.js",
-        "hash": "2489189475947655993"
-      },
-      {
-        "file": ".npmrc",
-        "hash": "9941704086940456981"
-      },
-      {
-        "file": "database/seeds/01h_chofer_users.js",
-        "hash": "13975130444617543123"
-      },
-      {
-        "file": "database/seeds/01g_logistica_colaboradores_users.js",
-        "hash": "521923252905384363"
-      },
-      {
-        "file": "database/migrations/20260427000002_fix_checklists_fotos_foreign_keys.js",
-        "hash": "17086381791522967126"
-      },
-      {
-        "file": "database/seeds/01b_logistica_seed.js",
-        "hash": "16198458835720309069"
-      },
-      {
-        "file": "database/migrations/20260424163000_add_fleet_fields_to_unidades.js",
-        "hash": "2294778551477680827"
-      },
-      {
-        "file": "database/seeds/07_daily_assignments.js",
-        "hash": "10533850458307636389"
-      },
-      {
-        "file": "database/migrations/20260414104000_sync_roles_production.js",
-        "hash": "15606133683229291687"
-      },
-      {
-        "file": "database/migrations/20260414104200_normalize_production_roles.js",
-        "hash": "11634888082849146297"
-      },
-      {
-        "file": "database/seeds/00a_zones.js",
-        "hash": "17531412748295496775"
-      },
-      {
-        "file": "database/migrations/20260410170612_fix_catalogs_parent_id_constraint.js",
-        "hash": "4476013461581687517"
-      },
-      {
-        "file": "database/migrations/20260420153000_init_logistics_schema.js",
-        "hash": "186249475715477346"
-      },
-      {
-        "file": "database/seeds/02_brands.js",
-        "hash": "15031306579306081567"
-      },
-      {
-        "file": "database/seeds/08_daily_captures.js",
-        "hash": "12681943178328811557"
-      },
-      {
-        "file": "database/migrations/20260410151048_add_cloudinary_public_id.js",
-        "hash": "5093950688688802540"
-      },
-      {
-        "file": "database/seeds/01d_logistica_unidades.js",
-        "hash": "18164243747546528061"
-      },
-      {
-        "file": "database/migrations/20260402141502_create_daily_assignments.js",
-        "hash": "4959690170160711275"
-      },
-      {
-        "file": "database/seeds/01_users.js",
-        "hash": "5793808740190833912"
-      },
-      {
-        "file": "database/seeds/01d_remove_specific_colaboradores.js",
-        "hash": "8214880246200095808"
-      },
-      {
-        "file": "database/add_cloudinary_column.sql",
-        "hash": "12170767601534015950"
-      },
-      {
-        "file": "database/seeds/01f_embarque_completo_con_relaciones.js",
-        "hash": "9442785581235869120"
-      },
-      {
-        "file": ".gitignore",
-        "hash": "16171470636116759533"
-      },
-      {
-        "file": "database/migrations/20260427000004_create_fuel_management_schema.js",
-        "hash": "4997244382901198109"
-      },
-      {
-        "file": "database/migrations/20260330165441_20260330_init_auth_schema.js",
-        "hash": "11258048054278754970"
-      },
-      {
-        "file": "Dockerfile.view",
-        "hash": "7331423205422890008"
-      },
-      {
-        "file": "database/seeds/01f_verify_roles.js",
-        "hash": "12962287101793780386"
-      },
-      {
-        "file": "database/migrations/20250428120002_add_guia_id_to_fotos.js",
-        "hash": "13664891830428248439"
-      },
-      {
-        "file": "database/migrations/20260330165445_20260330_init_catalogs_schema.js",
-        "hash": "2694918293729740358"
-      },
-      {
-        "file": "database/migrations/20260424171000_add_ayudantes_to_guias.js",
-        "hash": "14649082301293600806"
-      },
-      {
-        "file": "database/migrations/20260414120000_fix_supervisor_id_integrity.js",
-        "hash": "3402121076076597957"
-      },
-      {
-        "file": "database/migrations/20260402130000_add_supervisor_id_to_users.js",
-        "hash": "260444976317739642"
-      },
-      {
-        "file": "database/seeds/01e_clean_users_related.js",
-        "hash": "6837806709852510800"
-      },
-      {
-        "file": "database/seeds/03_products.js",
-        "hash": "15543212006125928866"
-      },
-      {
-        "file": "database/migrations/20260330165447_20260330_init_field_operations_schema.js",
-        "hash": "16532866879954088831"
-      },
-      {
-        "file": "jest.preset.js",
-        "hash": "9430166341120122740"
-      },
-      {
-        "file": "database/migrations/20260424173000_add_costos_columns.js",
-        "hash": "5297740077108540821"
-      },
-      {
-        "file": "database/seeds/01i_check_chofer_users.js",
-        "hash": "6453574563061799396"
-      },
-      {
-        "file": "database/migrations/20260424172000_add_detalles_tables.js",
-        "hash": "15403518210237989824"
-      },
-      {
-        "file": "database/seeds/01j_create_users_for_choferes.js",
-        "hash": "1533076172091648545"
-      },
-      {
-        "file": "database/seeds/00_roles.js",
-        "hash": "3758935580653823398"
-      },
-      {
-        "file": "database/migrations/20260413233200_change_puntuacion_to_decimal.js",
-        "hash": "3574761022922196745"
-      },
-      {
-        "file": "database/seeds/01g_check_users.js",
-        "hash": "15269228154260848623"
-      },
-      {
-        "file": "package.json",
-        "hash": "6713622914153892717"
-      },
-      {
-        "file": "database/migrations/20250428130002_remove_subido_por.js",
-        "hash": "14149446561302570964"
-      },
-      {
-        "file": "database/migrations/20260424120000_add_repartidor_km_to_destinos.js",
-        "hash": "1900552803064564060"
-      },
-      {
-        "file": "database/seeds/04_catalogs.js",
-        "hash": "5760364577860083285"
-      },
-      {
-        "file": "nx.json",
-        "hash": "18265618586128586142"
-      },
-      {
-        "file": "database/migrations/20260409174829_refactor_zones.js",
-        "hash": "1637055527667658835"
-      },
-      {
-        "file": "database/migrations/20250428180000_add_columns_to_users.js",
-        "hash": "8753520911357596533"
-      },
-      {
-        "file": "database/migrations/20260427000001_link_users_to_colaboradores.js",
-        "hash": "12643050964349211605"
-      },
-      {
-        "file": "database/migrations/20250428120001_add_chofer_id_to_fotos.js",
-        "hash": "9019370488918755488"
-      },
-      {
-        "file": "README.md",
-        "hash": "9278998110682614562"
-      },
-      {
-        "file": "database/migrations/20260402141501_add_parent_id_to_catalogs.js",
-        "hash": "985783995748298683"
-      },
-      {
-        "file": "database/migrations/20260427000000_add_checklists_and_fotos.js",
-        "hash": "4339160978411433185"
-      },
-      {
-        "file": "database/seeds/00_clean_colaboradores_embarques.js",
-        "hash": "4603342233030415652"
-      },
-      {
-        "file": "database/seeds/05_scoring_config.js",
-        "hash": "3547127868769234357"
-      },
-      {
-        "file": "database/migrations/20260413210000_fix_zones_uuids.js",
-        "hash": "9166985577853017645"
-      },
-      {
-        "file": "database/seeds/000_cleanup.js",
-        "hash": "11564318641312707521"
-      },
-      {
-        "file": "tsconfig.base.json",
-        "hash": "8011690573286260331"
-      },
-      {
-        "file": "database/migrations/20260428000300_make_items_nullable.js",
-        "hash": "9044178873733507872"
-      },
-      {
-        "file": "database/fix_migration.js",
-        "hash": "750253604442746232"
-      },
-      {
-        "file": "database/migrations/20250428110000_add_fechas_embarques.js",
-        "hash": "8470818984313662472"
-      },
-      {
-        "file": "database/migrations/20260330165443_20260330_init_daily_captures_schema.js",
-        "hash": "157084602558112272"
-      },
-      {
-        "file": "database/migrations/20260414200000_add_scoring_config_versions.js",
-        "hash": "1767773529438191238"
-      },
-      {
-        "file": "database/migrations/20260414220000_add_rubrica_ejecucion.js",
-        "hash": "13417168307797742688"
-      },
-      {
-        "file": "database/knexfile.js",
-        "hash": "15738390706394806791"
-      },
-      {
-        "file": "database/migrations/20260414210000_add_scoring_fields_to_daily_captures.js",
-        "hash": "11193782582488434534"
-      },
-      {
-        "file": "database/migrations/20260414103600_fix_roles_case_production.js",
-        "hash": "8517888144778641297"
-      },
-      {
-        "file": "Dockerfile",
-        "hash": "1193713299888661151"
-      },
-      {
-        "file": "database/migrations/20250428130000_consolidate_fotos_columns.js",
-        "hash": "1700816492952251072"
-      },
-      {
-        "file": "database/migrations/20260428000200_add_respuestas_to_checklists.js",
-        "hash": "7021841836466038761"
-      },
-      {
-        "file": "database/migrations/20260428000100_add_chofer_id_to_checklists.js",
-        "hash": "17584599170312736689"
-      },
-      {
-        "file": "database/migrations/20260331000001_v3_add_scores_to_catalogs.js",
-        "hash": "14549549451554693058"
-      },
-      {
-        "file": "database/migrations/20250428170000_add_timestamps_to_embarques.js",
-        "hash": "1813151571886933288"
+        "file": "nginx.conf",
+        "hash": "17936468969436158907"
       },
       {
         "file": "database/migrations/20260424170000_add_estado_to_colaboradores.js",
         "hash": "16669646245572003754"
       },
       {
-        "file": "database/migrations/20250415100000_add_offline_sync_fields.js",
-        "hash": "10072240727474968457"
+        "file": "database/knexfile.js",
+        "hash": "15738390706394806791"
+      },
+      {
+        "file": "database/seeds/01f_verify_roles.js",
+        "hash": "12962287101793780386"
+      },
+      {
+        "file": "database/migrations/20260427000003_fix_checklists_fotos_foreign_keys_v2.js",
+        "hash": "17086381791522967126"
+      },
+      {
+        "file": "database/migrations/20260414104200_normalize_production_roles.js",
+        "hash": "11634888082849146297"
+      },
+      {
+        "file": "Dockerfile",
+        "hash": "15639247299373769812"
+      },
+      {
+        "file": "database/migrations/20260414220000_add_rubrica_ejecucion.js",
+        "hash": "13417168307797742688"
+      },
+      {
+        "file": "database/migrations/20250428110000_add_fechas_embarques.js",
+        "hash": "8470818984313662472"
+      },
+      {
+        "file": "database/migrations/20260428000300_make_items_nullable.js",
+        "hash": "9044178873733507872"
+      },
+      {
+        "file": "database/migrations/20260429000000_add_roles_to_users.js",
+        "hash": "7731176087764908206"
+      },
+      {
+        "file": "database/migrations/20260330165445_20260330_init_catalogs_schema.js",
+        "hash": "2694918293729740358"
+      },
+      {
+        "file": "database/migrations/20260414120000_fix_supervisor_id_integrity.js",
+        "hash": "3402121076076597957"
       },
       {
         "file": "database/migrations/20260417180000_add_pertenece_mega_dulces_to_exhibitions.js",
         "hash": "17046688688907239603"
+      },
+      {
+        "file": "database/seeds/01e_clean_users_related.js",
+        "hash": "6837806709852510800"
+      },
+      {
+        "file": "database/migrations/20250415100000_add_offline_sync_fields.js",
+        "hash": "10072240727474968457"
+      },
+      {
+        "file": "database/seeds/01f_embarque_completo_con_relaciones.js",
+        "hash": "9442785581235869120"
+      },
+      {
+        "file": "database/seeds/01i_check_chofer_users.js",
+        "hash": "6453574563061799396"
+      },
+      {
+        "file": "eslint.config.js",
+        "hash": "2478217381773231556"
+      },
+      {
+        "file": "database/seeds/03_products.js",
+        "hash": "15543212006125928866"
+      },
+      {
+        "file": "Dockerfile.view",
+        "hash": "7331423205422890008"
+      },
+      {
+        "file": "package-lock.json",
+        "hash": "12150023008222682041"
+      },
+      {
+        "file": "database/migrations/20260414130000_fix_supervisor_id_production.js",
+        "hash": "9686040481709306062"
+      },
+      {
+        "file": "database/migrations/20260427000004_create_fuel_management_schema.js",
+        "hash": "4997244382901198109"
+      },
+      {
+        "file": "database/migrations/20250428130000_consolidate_fotos_columns.js",
+        "hash": "1700816492952251072"
+      },
+      {
+        "file": "database/migrations/20260414220001_add_score_maximo_to_config_versions.js",
+        "hash": "5769448018101356473"
+      },
+      {
+        "file": "database/migrations/20260424171000_add_ayudantes_to_guias.js",
+        "hash": "14649082301293600806"
+      },
+      {
+        "file": "database/seeds/00_clean_colaboradores_embarques.js",
+        "hash": "4603342233030415652"
+      },
+      {
+        "file": "database/migrations/20260424172000_add_detalles_tables.js",
+        "hash": "15403518210237989824"
+      },
+      {
+        "file": "database/seeds/08_daily_captures.js",
+        "hash": "12681943178328811557"
+      },
+      {
+        "file": "database/migrations/20260401000000_v4_rename_planograma_to_planograms.js",
+        "hash": "12883015568955079618"
+      },
+      {
+        "file": "database/seeds/02_brands.js",
+        "hash": "15031306579306081567"
+      },
+      {
+        "file": "database/migrations/20260330165442_20260330_init_captures_schema.js",
+        "hash": "804792513858306976"
+      },
+      {
+        "file": "database/migrations/20260414210000_add_scoring_fields_to_daily_captures.js",
+        "hash": "11193782582488434534"
+      },
+      {
+        "file": "database/migrations/20260428000100_add_chofer_id_to_checklists.js",
+        "hash": "17584599170312736689"
+      },
+      {
+        "file": "database/seeds/01h_chofer_users.js",
+        "hash": "13975130444617543123"
+      },
+      {
+        "file": "database/migrations/20250428120001_add_chofer_id_to_fotos.js",
+        "hash": "9019370488918755488"
+      },
+      {
+        "file": "database/seeds/01d_remove_specific_colaboradores.js",
+        "hash": "8214880246200095808"
+      },
+      {
+        "file": "database/migrations/20250428180000_add_columns_to_users.js",
+        "hash": "8753520911357596533"
+      },
+      {
+        "file": "database/migrations/20260414200000_add_scoring_config_versions.js",
+        "hash": "1767773529438191238"
+      },
+      {
+        "file": "database/seeds/01b_logistica_seed.js",
+        "hash": "16198458835720309069"
+      },
+      {
+        "file": "database/seeds/000_cleanup.js",
+        "hash": "11564318641312707521"
+      },
+      {
+        "file": "database/migrations/20260414103600_fix_roles_case_production.js",
+        "hash": "8517888144778641297"
+      },
+      {
+        "file": "database/migrations/20260427000001_link_users_to_colaboradores.js",
+        "hash": "12643050964349211605"
+      },
+      {
+        "file": "tsconfig.base.json",
+        "hash": "8011690573286260331"
+      },
+      {
+        "file": "database/seeds/01g_check_users.js",
+        "hash": "15269228154260848623"
+      },
+      {
+        "file": "database/knexfile.ts",
+        "hash": "12010299251498169420"
+      },
+      {
+        "file": "database/migrations/20260424163000_add_fleet_fields_to_unidades.js",
+        "hash": "2294778551477680827"
+      },
+      {
+        "file": "database/migrations/20260427000002_fix_checklists_fotos_foreign_keys.js",
+        "hash": "17086381791522967126"
+      },
+      {
+        "file": "database/migrations/20260414104000_sync_roles_production.js",
+        "hash": "15606133683229291687"
+      },
+      {
+        "file": "database/migrations/20260330165446_20260330_init_scoring_schema.js",
+        "hash": "6479812992078546234"
+      },
+      {
+        "file": "database/fix_migration.js",
+        "hash": "750253604442746232"
+      },
+      {
+        "file": "database/migrations/20260331000001_v3_add_scores_to_catalogs.js",
+        "hash": "14549549451554693058"
+      },
+      {
+        "file": ".npmrc",
+        "hash": "9941704086940456981"
+      },
+      {
+        "file": "docker-compose.prod.yml",
+        "hash": "1938083618851943586"
+      },
+      {
+        "file": "database/migrations/20260424120000_add_repartidor_km_to_destinos.js",
+        "hash": "1900552803064564060"
+      },
+      {
+        "file": "database/migrations/20260410170612_fix_catalogs_parent_id_constraint.js",
+        "hash": "4476013461581687517"
+      },
+      {
+        "file": "database/add_cloudinary_column.sql",
+        "hash": "12170767601534015950"
+      },
+      {
+        "file": "database/seeds/01d_logistica_unidades.js",
+        "hash": "18164243747546528061"
+      },
+      {
+        "file": "database/seeds/01j_create_users_for_choferes.js",
+        "hash": "1533076172091648545"
+      },
+      {
+        "file": "database/migrations/20260413210000_fix_zones_uuids.js",
+        "hash": "9166985577853017645"
+      },
+      {
+        "file": "database/migrations/20260402160000_update_assignments_to_weekly.js",
+        "hash": "14452574582107848075"
+      },
+      {
+        "file": "database/migrations/20260402130000_add_supervisor_id_to_users.js",
+        "hash": "260444976317739642"
+      },
+      {
+        "file": "database/seeds/01c_logistica_colaboradores.js",
+        "hash": "2489189475947655993"
+      },
+      {
+        "file": "database/migrations/20250428130002_remove_subido_por.js",
+        "hash": "14149446561302570964"
+      },
+      {
+        "file": "database/seeds/01g_logistica_colaboradores_users.js",
+        "hash": "521923252905384363"
+      },
+      {
+        "file": "nx.json",
+        "hash": "18265618586128586142"
+      },
+      {
+        "file": "database/migrations/20260402141501_add_parent_id_to_catalogs.js",
+        "hash": "985783995748298683"
+      },
+      {
+        "file": "jest.preset.js",
+        "hash": "9430166341120122740"
+      },
+      {
+        "file": "database/migrations/20260330165447_20260330_init_field_operations_schema.js",
+        "hash": "16532866879954088831"
+      },
+      {
+        "file": ".github/workflows/deploy.yml",
+        "hash": "14759475886759361421"
+      },
+      {
+        "file": "database/migrations/20260413233200_change_puntuacion_to_decimal.js",
+        "hash": "3574761022922196745"
+      },
+      {
+        "file": "database/migrations/20250428120002_add_guia_id_to_fotos.js",
+        "hash": "13664891830428248439"
+      },
+      {
+        "file": "package.json",
+        "hash": "10699953480512751373"
+      },
+      {
+        "file": "database/migrations/20260420153000_init_logistics_schema.js",
+        "hash": "186249475715477346"
+      },
+      {
+        "file": "database/seeds/01e_logistica_embarques.js",
+        "hash": "8411341162076969865"
+      },
+      {
+        "file": "database/migrations/20260409174829_refactor_zones.js",
+        "hash": "1637055527667658835"
+      },
+      {
+        "file": "database/migrations/20260330165443_20260330_init_daily_captures_schema.js",
+        "hash": "157084602558112272"
+      },
+      {
+        "file": "database/seeds/04_catalogs.js",
+        "hash": "5760364577860083285"
+      },
+      {
+        "file": "database/seeds/00a_zones.js",
+        "hash": "17531412748295496775"
+      },
+      {
+        "file": "database/migrations/20260330165444_20260330_init_planograma_schema.js",
+        "hash": "910734349432654109"
+      },
+      {
+        "file": "database/seeds/00_roles.js",
+        "hash": "3758935580653823398"
+      },
+      {
+        "file": "database/migrations/20260410151048_add_cloudinary_public_id.js",
+        "hash": "5093950688688802540"
+      },
+      {
+        "file": "database/migrations/20260428000200_add_respuestas_to_checklists.js",
+        "hash": "7021841836466038761"
+      },
+      {
+        "file": ".gitignore",
+        "hash": "16171470636116759533"
+      },
+      {
+        "file": "database/migrations/20260331000000_v2_daily_captures_schema.js",
+        "hash": "15696643244356592832"
+      },
+      {
+        "file": "database/migrations/20250428140000_fix_fotos_missing_columns.js",
+        "hash": "10689910822580822645"
+      },
+      {
+        "file": "database/migrations/20260402141502_create_daily_assignments.js",
+        "hash": "4959690170160711275"
+      },
+      {
+        "file": "database/migrations/20260330165441_20260330_init_auth_schema.js",
+        "hash": "11258048054278754970"
+      },
+      {
+        "file": "database/seeds/05_scoring_config.js",
+        "hash": "3547127868769234357"
+      },
+      {
+        "file": "database/migrations/20260427000000_add_checklists_and_fotos.js",
+        "hash": "4339160978411433185"
+      },
+      {
+        "file": "database/migrations/20250428170000_add_timestamps_to_embarques.js",
+        "hash": "1813151571886933288"
+      },
+      {
+        "file": "database/seeds/01_users.js",
+        "hash": "5793808740190833912"
+      },
+      {
+        "file": "database/migrations/20260424173000_add_costos_columns.js",
+        "hash": "5297740077108540821"
+      },
+      {
+        "file": "database/seeds/07_daily_assignments.js",
+        "hash": "10533850458307636389"
       }
     ],
     "projectFileMap": {
@@ -1184,11 +1184,12 @@
         },
         {
           "file": "apps/logistica-api/src/app/app.module.ts",
-          "hash": "2638555584961306606",
+          "hash": "8907569680809492155",
           "deps": [
             "npm:@nestjs/common",
             "npm:@nestjs/config",
-            "npm:@nestjs/schedule"
+            "npm:@nestjs/schedule",
+            "npm:@nestjs/serve-static"
           ]
         },
         {
@@ -1218,7 +1219,7 @@
         },
         {
           "file": "apps/logistica-api/src/app/auth/auth.module.ts",
-          "hash": "4476963851225872391",
+          "hash": "10188479210672032834",
           "deps": [
             "npm:@nestjs/common",
             "npm:@nestjs/jwt",
@@ -1227,7 +1228,7 @@
         },
         {
           "file": "apps/logistica-api/src/app/auth/jwt.strategy.ts",
-          "hash": "11959117534308803448",
+          "hash": "11223351444244237147",
           "deps": [
             "npm:@nestjs/common",
             "npm:@nestjs/passport",
@@ -1463,7 +1464,7 @@
         },
         {
           "file": "apps/logistica-api/src/main.ts",
-          "hash": "1839847203227638395",
+          "hash": "16954786587169596382",
           "deps": [
             "npm:dotenv",
             "npm:@nestjs/core",

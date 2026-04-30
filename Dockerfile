@@ -89,7 +89,7 @@ ENV NODE_ENV=production
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist/apps/logistica-api ./dist
-COPY --from=builder /app/dist/apps/logistica-view/browser ./dist/apps/logistica-view/browser
+COPY --from=builder /app/dist/apps/logistica-view/browser ./public
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser

@@ -25,7 +25,7 @@ import { join } from 'path';
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), 'dist', 'apps', 'logistica-view', 'browser'),
+      rootPath: join(__dirname, '..', 'public'),
       exclude: ['/api/(.*)'],
     }),
     ScheduleModule.forRoot(),
