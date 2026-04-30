@@ -25,8 +25,8 @@ import { join } from 'path';
       isGlobal: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api/(.*)'],
+      rootPath: join(process.cwd(), 'public'),
+      exclude: ['/api/{*path}'],
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
