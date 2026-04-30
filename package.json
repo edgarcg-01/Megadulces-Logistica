@@ -67,6 +67,7 @@
     "primeicons": "^7.0.0",
     "primeng": "^18.0.2",
     "puppeteer": "^24.42.0",
+    "railway": "^2.0.17",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sharp": "^0.34.5",
