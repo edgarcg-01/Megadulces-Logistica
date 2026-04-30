@@ -13,6 +13,10 @@ import { CardModule } from 'primeng/card';
 import { TabViewModule } from 'primeng/tabview';
 import { TimelineModule } from 'primeng/timeline';
 import { CheckboxModule } from 'primeng/checkbox';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { ChecklistService, Checklist, ChecklistCategoria } from '../../../core/services/checklist.service';
 import { FotosService, Foto, FotoTipo } from '../../../core/services/fotos.service';
 import { 
@@ -37,10 +41,10 @@ interface WizardStep {
   selector: 'app-delivery-wizard',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    ButtonModule, 
-    DialogModule, 
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    DialogModule,
     ProgressBar,
     ProgressSpinnerModule,
     StepsModule,
@@ -48,7 +52,11 @@ interface WizardStep {
     CardModule,
     TabViewModule,
     TimelineModule,
-    CheckboxModule
+    CheckboxModule,
+    RadioButtonModule,
+    InputTextModule,
+    TextareaModule,
+    InputNumberModule
   ],
   providers: [MessageService],
   template: `
@@ -133,69 +141,70 @@ interface WizardStep {
                   <div *ngFor="let item of categoria.items" class="checklist-item">
                     
                     <!-- Campo de Texto - Solo lectura para datos del backend -->
-                    <div *ngIf="item.tipo === 'texto' && esCampoSoloLectura(item.id)" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-logistics-border">
-                      <span class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</span>
-                      <span class="text-sm text-logistics-accent font-semibold">{{ respuestasSalida()[item.id] || '-' }}</span>
+                    <div *ngIf="item.tipo === 'texto' && esCampoSoloLectura(item.id)" class="flex items-center justify-between p-3 surface-ground rounded-lg border border-divider">
+                      <span class="text-sm font-medium text-color">{{ item.descripcion }}</span>
+                      <span class="text-sm text-primary font-semibold">{{ respuestasSalida()[item.id] || '-' }}</span>
                     </div>
 
                     <!-- Campo de Texto - Editable -->
                     <div *ngIf="item.tipo === 'texto' && !esCampoSoloLectura(item.id)" class="flex flex-col gap-1">
-                      <label class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</label>
-                      <input 
+                      <label class="text-sm font-medium text-color">{{ item.descripcion }}</label>
+                      <input
+                        pInputText
                         type="text"
                         [name]="'salida_' + item.id"
                         [ngModel]="respuestasSalida()[item.id]"
                         (ngModelChange)="updateRespuestaSalida(item.id, $event)"
-                        class="w-full p-2 border border-logistics-border rounded bg-logistics-surface"
+                        class="w-full"
                         [placeholder]="'Ingrese ' + item.descripcion.toLowerCase()">
                     </div>
 
                     <!-- Campo Numérico - Solo lectura para kilometraje -->
-                    <div *ngIf="item.tipo === 'numero' && esCampoSoloLectura(item.id)" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-logistics-border">
-                      <span class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</span>
-                      <span class="text-sm text-logistics-accent font-semibold">{{ respuestasSalida()[item.id] || '0' }}</span>
+                    <div *ngIf="item.tipo === 'numero' && esCampoSoloLectura(item.id)" class="flex items-center justify-between p-3 surface-ground rounded-lg border border-divider">
+                      <span class="text-sm font-medium text-color">{{ item.descripcion }}</span>
+                      <span class="text-sm text-primary font-semibold">{{ respuestasSalida()[item.id] || '0' }}</span>
                     </div>
 
                     <!-- Campo Numérico - Editable -->
                     <div *ngIf="item.tipo === 'numero' && !esCampoSoloLectura(item.id)" class="flex flex-col gap-1">
-                      <label class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</label>
-                      <input 
-                        type="number"
+                      <label class="text-sm font-medium text-color">{{ item.descripcion }}</label>
+                      <p-inputnumber
                         [name]="'salida_' + item.id"
                         [ngModel]="respuestasSalida()[item.id]"
                         (ngModelChange)="updateRespuestaSalida(item.id, $event)"
-                        class="w-full p-2 border border-logistics-border rounded bg-logistics-surface"
+                        class="w-full"
                         placeholder="0">
+                      </p-inputnumber>
                     </div>
 
                     <!-- Campo Estado (Bien/Regular/Malo/No aplica) -->
-                    <div *ngIf="item.tipo === 'estado'" class="flex items-center justify-between p-3 bg-logistics-surface rounded-lg border border-logistics-border">
+                    <div *ngIf="item.tipo === 'estado'" class="flex items-center justify-between p-3 surface-card rounded-lg border border-divider">
                       <div class="flex items-center gap-2">
-                        <span class="text-sm text-logistics-text">{{ item.descripcion }}</span>
+                        <span class="text-sm text-color">{{ item.descripcion }}</span>
                         <span *ngIf="item.requiere_foto" class="text-xs text-orange-500">
                           <i class="pi pi-camera mr-1"></i>Requiere foto si está malo
                         </span>
                       </div>
                       <div class="flex gap-2">
-                        <button 
+                        <button
                           *ngFor="let opcion of ['bien', 'regular', 'malo', 'no_aplica']"
                           (click)="setEstado(item.id, opcion, 'salida')"
-                          [class]="'px-3 py-1 text-xs rounded-full transition-colors ' + 
-                                   (respuestasSalida()[item.id] === opcion ? 
-                                     (opcion === 'bien' ? 'bg-green-500 text-white' : 
+                          [class]="'px-3 py-1 text-xs rounded-full transition-colors ' +
+                                   (respuestasSalida()[item.id] === opcion ?
+                                     (opcion === 'bien' ? 'bg-green-500 text-white' :
                                       opcion === 'regular' ? 'bg-yellow-500 text-white' :
-                                      opcion === 'malo' ? 'bg-red-500 text-white' : 
-                                      'bg-gray-500 text-white') : 
-                                     'bg-logistics-surface2 text-logistics-text-mid hover:bg-logistics-border')">
+                                      opcion === 'malo' ? 'bg-red-500 text-white' :
+                                      'bg-gray-500 text-white') :
+                                     'surface-200 text-color hover:surface-300')">
                           {{ opcion === 'no_aplica' ? 'N/A' : opcion | titlecase }}
                         </button>
                       </div>
                     </div>
 
                     <!-- Si/no -->
-                    <div *ngIf="item.tipo === 'si_no'" class="flex items-center justify-between p-3 bg-logistics-surface rounded-lg border border-logistics-border">
-                      <span class="text-sm text-logistics-text">{{ item.descripcion }}</span>
-                      <p-checkbox 
+                    <div *ngIf="item.tipo === 'si_no'" class="flex items-center justify-between p-3 surface-card rounded-lg border border-divider">
+                      <span class="text-sm text-color">{{ item.descripcion }}</span>
+                      <p-checkbox
                         [name]="'salida_' + item.id"
                         [ngModel]="respuestasSalida()[item.id]"
                         (ngModelChange)="updateRespuestaSalida(item.id, $event)"
@@ -205,14 +214,13 @@ interface WizardStep {
 
                     <!-- Texto largo -->
                     <div *ngIf="item.tipo === 'texto_largo'" class="flex flex-col gap-1">
-                      <label class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</label>
-                      <textarea 
-                        [name]="'salida_' + item.id"
-                        [ngModel]="respuestasSalida()[item.id]"
-                        (ngModelChange)="updateRespuestaSalida(item.id, $event)"
+                      <label class="text-sm font-medium text-color">{{ item.descripcion }}</label>
+                      <textarea
+                        #ta
+                        [value]="respuestasSalida()[item.id] || ''"
+                        (input)="updateRespuestaSalida(item.id, ta.value)"
                         rows="3"
-                        class="w-full p-2 border border-logistics-border rounded bg-logistics-surface"
-                        [placeholder]="'Describa ' + item.descripcion.toLowerCase()">
+                        class="w-full p-2 surface-card border border-divider rounded text-color">
                       </textarea>
                     </div>
 
@@ -255,25 +263,30 @@ interface WizardStep {
 
           <!-- PASO 2: EN TRÁNSITO (Mensaje informativo) -->
           <div *ngIf="currentEstado() === 'en_transito'" class="text-center py-8">
-            <div class="mb-6">
+            <div class="mb-8">
               <i class="pi pi-truck text-6xl text-logistics-accent mb-4"></i>
-              <h3 class="text-xl font-semibold text-logistics-text mb-2">En Tránsito</h3>
+              <h3 class="text-2xl font-semibold text-logistics-text mb-2">En Tránsito</h3>
               <p class="text-logistics-text-mid">Dirígete a tu destino. Cuando llegues, presiona el botón para continuar.</p>
             </div>
-            
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
               <p class="text-green-700 text-sm">
                 <i class="pi pi-check-circle mr-1"></i>
                 Checklist de salida completado correctamente
               </p>
             </div>
 
-            <button 
-              (click)="onLlegadaADestino()"
-              class="px-6 py-3 bg-logistics-accent text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors">
-              <i class="pi pi-map-marker mr-2"></i>
-              Llegué a Destino
-            </button>
+            <p-button
+              label="Llegué a Destino"
+              icon="pi pi-map-marker"
+              (onClick)="onLlegadaADestino()"
+              styleClass="p-button-raised p-button-lg">
+            </p-button>
+          </div>
+
+          <!-- DEBUG: Mostrar estado actual siempre -->
+          <div class="text-xs text-gray-500 mt-4">
+            DEBUG: Estado actual = {{ currentEstado() }}
           </div>
 
           <!-- PASO 3: FOTOS DE ENTREGA -->
@@ -294,21 +307,23 @@ interface WizardStep {
               <!-- Foto: Papel Firmado -->
               <p-card header="Papel de Entrega Firmado" class="foto-card">
                 <div class="text-center">
-                  <div *ngIf="!fotos()['entrega_firmada']" class="upload-area p-6 border-2 border-dashed border-logistics-border rounded-lg">
+                  <div *ngIf="!fotos()['entrega_firmada']"
+                       class="upload-area p-6 border-2 border-dashed border-logistics-border rounded-lg cursor-pointer hover:bg-logistics-surface2 transition-colors"
+                       (click)="captureFoto('entrega_firmada')">
                     <i class="pi pi-file-edit text-4xl text-logistics-text-mid mb-3"></i>
                     <p class="text-sm text-logistics-text-mid mb-3">Foto del documento firmado por el cliente</p>
-                    <button 
-                      (click)="captureFoto('entrega_firmada')"
+                    <button
+                      (click)="$event.stopPropagation(); captureFoto('entrega_firmada')"
                       [disabled]="uploadingFoto()"
                       class="px-4 py-2 bg-logistics-accent text-white rounded text-sm">
                       <i class="pi pi-camera mr-1"></i>
                       Tomar Foto
                     </button>
                   </div>
-                  
+
                   <div *ngIf="fotos()['entrega_firmada']" class="preview-container">
                     <img [src]="fotos()['entrega_firmada']" class="max-h-48 mx-auto rounded-lg border">
-                    <button 
+                    <button
                       (click)="eliminarFoto('entrega_firmada')"
                       class="mt-2 px-3 py-1 text-xs text-red-500 hover:text-red-600">
                       <i class="pi pi-trash mr-1"></i>Eliminar
@@ -320,21 +335,23 @@ interface WizardStep {
               <!-- Foto: INE Receptor -->
               <p-card header="INE del Receptor" class="foto-card">
                 <div class="text-center">
-                  <div *ngIf="!fotos()['ine_receptor']" class="upload-area p-6 border-2 border-dashed border-logistics-border rounded-lg">
+                  <div *ngIf="!fotos()['ine_receptor']"
+                       class="upload-area p-6 border-2 border-dashed border-logistics-border rounded-lg cursor-pointer hover:bg-logistics-surface2 transition-colors"
+                       (click)="captureFoto('ine_receptor')">
                     <i class="pi pi-id-card text-4xl text-logistics-text-mid mb-3"></i>
                     <p class="text-sm text-logistics-text-mid mb-3">Foto de la identificación oficial</p>
-                    <button 
-                      (click)="captureFoto('ine_receptor')"
+                    <button
+                      (click)="$event.stopPropagation(); captureFoto('ine_receptor')"
                       [disabled]="uploadingFoto()"
                       class="px-4 py-2 bg-logistics-accent text-white rounded text-sm">
                       <i class="pi pi-camera mr-1"></i>
                       Tomar Foto
                     </button>
                   </div>
-                  
+
                   <div *ngIf="fotos()['ine_receptor']" class="preview-container">
                     <img [src]="fotos()['ine_receptor']" class="max-h-48 mx-auto rounded-lg border">
-                    <button 
+                    <button
                       (click)="eliminarFoto('ine_receptor')"
                       class="mt-2 px-3 py-1 text-xs text-red-500 hover:text-red-600">
                       <i class="pi pi-trash mr-1"></i>Eliminar
@@ -380,64 +397,59 @@ interface WizardStep {
                   <div *ngFor="let item of categoria.items" class="checklist-item">
                     
                     <!-- Campo Estado -->
-                    <div *ngIf="item.tipo === 'estado'" class="flex items-center justify-between p-3 bg-logistics-surface rounded-lg border border-logistics-border">
+                    <div *ngIf="item.tipo === 'estado'" class="flex items-center justify-between p-3 surface-card rounded-lg border border-divider">
                       <div class="flex items-center gap-2">
-                        <span class="text-sm text-logistics-text">{{ item.descripcion }}</span>
+                        <span class="text-sm text-color">{{ item.descripcion }}</span>
                         <span *ngIf="item.requiere_foto" class="text-xs text-orange-500">
                           <i class="pi pi-camera mr-1"></i>Requiere foto si está malo
                         </span>
                       </div>
                       <div class="flex gap-2">
-                        <button 
+                        <button
                           *ngFor="let opcion of ['bien', 'regular', 'malo', 'no_aplica']"
                           (click)="setEstado(item.id, opcion, 'llegada')"
-                          [class]="'px-3 py-1 text-xs rounded-full transition-colors ' + 
-                                   (respuestasLlegada()[item.id] === opcion ? 
-                                     (opcion === 'bien' ? 'bg-green-500 text-white' : 
+                          [class]="'px-3 py-1 text-xs rounded-full transition-colors ' +
+                                   (respuestasLlegada()[item.id] === opcion ?
+                                     (opcion === 'bien' ? 'bg-green-500 text-white' :
                                       opcion === 'regular' ? 'bg-yellow-500 text-white' :
-                                      opcion === 'malo' ? 'bg-red-500 text-white' : 
-                                      'bg-gray-500 text-white') : 
-                                     'bg-logistics-surface2 text-logistics-text-mid hover:bg-logistics-border')">
+                                      opcion === 'malo' ? 'bg-red-500 text-white' :
+                                      'bg-gray-500 text-white') :
+                                     'surface-200 text-color hover:surface-300')">
                           {{ opcion === 'no_aplica' ? 'N/A' : opcion | titlecase }}
                         </button>
                       </div>
                     </div>
 
                     <!-- Si/No -->
-                    <div *ngIf="item.tipo === 'si_no'" class="flex items-center justify-between p-3 bg-logistics-surface rounded-lg border border-logistics-border">
-                      <span class="text-sm text-logistics-text">{{ item.descripcion }}</span>
+                    <div *ngIf="item.tipo === 'si_no'" class="flex items-center justify-between p-3 surface-card rounded-lg border border-divider">
+                      <span class="text-sm text-color">{{ item.descripcion }}</span>
                       <div class="flex gap-3">
-                        <label class="flex items-center gap-1 cursor-pointer">
-                          <input type="radio" 
-                                 [name]="'llegada_' + item.id"
-                                 [value]="true"
-                                 [ngModel]="respuestasLlegada()[item.id]"
-                                 (ngModelChange)="updateRespuestaLlegada(item.id, $event)"
-                                 class="accent-logistics-accent">
-                          <span class="text-sm">Sí</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                          <input type="radio" 
-                                 [name]="'llegada_' + item.id"
-                                 [value]="false"
-                                 [ngModel]="respuestasLlegada()[item.id]"
-                                 (ngModelChange)="updateRespuestaLlegada(item.id, $event)"
-                                 class="accent-logistics-accent">
-                          <span class="text-sm">No</span>
-                        </label>
+                        <p-radiobutton
+                          [name]="'llegada_' + item.id"
+                          [value]="true"
+                          [ngModel]="respuestasLlegada()[item.id]"
+                          (ngModelChange)="updateRespuestaLlegada(item.id, $event)">
+                        </p-radiobutton>
+                        <label class="text-sm text-color cursor-pointer" (click)="updateRespuestaLlegada(item.id, true)">Sí</label>
+                        <p-radiobutton
+                          [name]="'llegada_' + item.id"
+                          [value]="false"
+                          [ngModel]="respuestasLlegada()[item.id]"
+                          (ngModelChange)="updateRespuestaLlegada(item.id, $event)">
+                        </p-radiobutton>
+                        <label class="text-sm text-color cursor-pointer" (click)="updateRespuestaLlegada(item.id, false)">No</label>
                       </div>
                     </div>
 
                     <!-- Texto largo -->
                     <div *ngIf="item.tipo === 'texto_largo'" class="flex flex-col gap-1">
-                      <label class="text-sm font-medium text-logistics-text">{{ item.descripcion }}</label>
-                      <textarea 
-                        [name]="'llegada_' + item.id"
-                        [ngModel]="respuestasLlegada()[item.id]"
-                        (ngModelChange)="updateRespuestaLlegada(item.id, $event)"
+                      <label class="text-sm font-medium text-color">{{ item.descripcion }}</label>
+                      <textarea
+                        #ta
+                        [value]="respuestasLlegada()[item.id] || ''"
+                        (input)="updateRespuestaLlegada(item.id, ta.value)"
                         rows="3"
-                        class="w-full p-2 border border-logistics-border rounded bg-logistics-surface"
-                        [placeholder]="'Describa ' + item.descripcion.toLowerCase()">
+                        class="w-full p-2 surface-card border border-divider rounded text-color">
                       </textarea>
                     </div>
 
@@ -473,47 +485,32 @@ interface WizardStep {
             </div>
 
             <div *ngIf="!checklistLlegada()" class="text-center py-8">
-              <p-progressSpinner></p-progressSpinner>
-              <p class="mt-2 text-logistics-text-mid">Cargando checklist...</p>
-            </div>
-          </div>
-
-          <!-- PASO 5: COSTOS PENDIENTES / FINALIZAR -->
-          <div *ngIf="currentEstado() === 'costos_pendientes'" class="text-center py-8">
-            <div class="mb-6">
-              <i class="pi pi-dollar text-6xl text-green-500 mb-4"></i>
-              <h3 class="text-xl font-semibold text-logistics-text mb-2">Costos Registrados</h3>
-              <p class="text-logistics-text-mid">Los costos del embarque han sido calculados automáticamente.</p>
-            </div>
-            
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <p class="text-green-700 text-sm">
-                <i class="pi pi-check-circle mr-1"></i>
-                Checklist de llegada completado. Embarque listo para finalizar.
+                <i class="pi pi-star-fill mr-1"></i>
+                Has completado tu parte del envío. El operador finalizará el embarque.
               </p>
             </div>
-
-            <button 
-              (click)="onFinalizarEmbarque()"
-              class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-              <i class="pi pi-flag-fill mr-2"></i>
-              Finalizar Embarque
-            </button>
           </div>
 
-          <!-- ESTADO COMPLETADO -->
+          <!-- PASO FINAL: ENVÍO COMPLETADO POR EL CHOFER -->
           <div *ngIf="currentEstado() === 'completado'" class="text-center py-8">
-            <div class="mb-6">
+            <div class="mb-8">
               <i class="pi pi-check-circle text-6xl text-green-500 mb-4"></i>
-              <h3 class="text-xl font-semibold text-logistics-text mb-2">¡Embarque Completado!</h3>
-              <p class="text-logistics-text-mid">El proceso de entrega ha finalizado exitosamente.</p>
+              <h3 class="text-2xl font-semibold text-logistics-text mb-2">¡Felicidades!</h3>
+              <p class="text-logistics-text-mid text-lg">Has completado exitosamente tu parte del envío.</p>
+              <p class="text-logistics-text-mid mt-2">El operador finalizará el embarque.</p>
             </div>
-            
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
               <p class="text-green-700">
-                <i class="pi pi-info-circle mr-1"></i>
-                Este embarque ya no aparecerá en tu lista de pendientes.
+                <i class="pi pi-star-fill mr-1"></i>
+                Tu parte ha sido completada. Este embarque se ocultará de tu lista.
               </p>
+            </div>
+
+            <div class="text-green-600">
+              <i class="pi pi-verified text-4xl"></i>
+              <p class="font-semibold mt-2">Envío Completado</p>
             </div>
           </div>
 
@@ -522,7 +519,7 @@ interface WizardStep {
 
       <ng-template pTemplate="footer">
         <div class="flex justify-between items-center">
-          <button 
+          <button
             (click)="cancel()"
             class="px-4 py-2 text-logistics-text-mid hover:text-logistics-text transition-colors">
             <i class="pi pi-times mr-1"></i>
@@ -530,30 +527,22 @@ interface WizardStep {
           </button>
 
           <div class="flex gap-2" *ngIf="currentEstado() === 'checklist_salida' || currentEstado() === 'checklist_llegada' || currentEstado() === 'programado'">
-            <button 
+            <!-- Botón Guardar: Solo guarda progreso sin completar -->
+            <button
               (click)="guardarChecklistTemporal()"
-              [disabled]="!cambiosPendientes() || guardando()"
-              class="px-4 py-2 bg-logistics-surface2 hover:bg-logistics-border text-logistics-text rounded transition-colors disabled:opacity-50">
+              [disabled]="guardando()"
+              class="px-4 py-2 surface-200 hover:surface-300 text-color rounded transition-colors disabled:opacity-50">
               <i class="pi pi-save mr-1"></i>
               {{ guardando() ? 'Guardando...' : 'Guardar' }}
             </button>
-            
-            <button 
-              *ngIf="currentEstado() === 'checklist_salida' || currentEstado() === 'programado'"
-              (click)="completarChecklistSalida()"
-              [disabled]="!puedeCompletarChecklist('salida') || guardando()"
-              class="px-4 py-2 bg-logistics-accent text-white rounded hover:bg-opacity-90 transition-colors disabled:opacity-50">
-              <i class="pi pi-send mr-1"></i>
-              Completar y Salir
-            </button>
 
-            <button 
-              *ngIf="currentEstado() === 'checklist_llegada'"
-              (click)="completarChecklistLlegada()"
-              [disabled]="!puedeCompletarChecklist('llegada') || guardando()"
-              class="px-4 py-2 bg-logistics-accent text-white rounded hover:bg-opacity-90 transition-colors disabled:opacity-50">
-              <i class="pi pi-check mr-1"></i>
-              Completar Checklist
+            <!-- Botón Completar: Valida, guarda y avanza -->
+            <button
+              (click)="completarChecklistYContinuar()"
+              [disabled]="guardando()"
+              class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-opacity-90 transition-colors disabled:opacity-50">
+              <i class="pi pi-check-circle mr-1"></i>
+              {{ guardando() ? 'Completando...' : 'Completar' }}
             </button>
           </div>
         </div>
@@ -644,7 +633,6 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
     { label: 'En Tránsito', icon: 'pi-truck', estado: 'en_transito', completed: false, active: false },
     { label: 'Fotos Entrega', icon: 'pi-camera', estado: 'fotos_entrega', completed: false, active: false },
     { label: 'Checklist Llegada', icon: 'pi-clipboard-check', estado: 'checklist_llegada', completed: false, active: false },
-    { label: 'Finalizar', icon: 'pi-flag-fill', estado: 'costos_pendientes', completed: false, active: false },
   ]);
 
   // Canvas para firma
@@ -672,27 +660,25 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
     console.log('ngOnChanges called:', changes);
     if (changes['visible']) {
       this.isVisibleSignal.set(changes['visible'].currentValue);
-      // Solo inicializar cuando visible pasa a true
-      if (changes['visible'].currentValue === true && this.embarqueId) {
-        this.initialize();
-      }
     }
     if (changes['embarqueId']) {
       this.embarqueIdSignal.set(changes['embarqueId'].currentValue);
-      // Si el embarqueId cambia y el wizard está visible, reinicializar
-      if (this.visible) {
-        this.initialize();
-      }
+    }
+
+    // Solo inicializar si visible pasa a true y tenemos embarqueId
+    if (changes['visible']?.currentValue === true && this.embarqueId) {
+      this.initialize();
+    }
+    // Si el embarqueId cambia y el wizard ya está visible, reinicializar
+    else if (changes['embarqueId'] && this.visible) {
+      this.initialize();
     }
   }
 
   onVisibleChange(visible: boolean) {
     console.log('onVisibleChange called, visible:', visible);
     this.visibleChange.emit(visible);
-    if (visible) {
-      console.log('Dialog opening, initializing...');
-      this.initialize();
-    } else {
+    if (!visible) {
       this.reset();
     }
   }
@@ -978,13 +964,13 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
       console.log('Resultado confirmar llegada:', result);
 
       if (result?.success) {
-        this.currentEstado.set('costos_pendientes');
-        this.estadoChange.emit('costos_pendientes');
+        this.currentEstado.set('completado');
+        this.estadoChange.emit('completado');
         this.updateProgress();
         this.messageService.add({
           severity: 'success',
           summary: 'Checklist Completado',
-          detail: 'Los costos han sido registrados. Puedes finalizar el embarque.'
+          detail: 'Has completado tu parte del envío. El operador finalizará el embarque.'
         });
       }
     } catch (error: any) {
@@ -997,34 +983,6 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
     } finally {
       this.guardando.set(false);
       console.log('=== FIN COMPLETAR CHECKLIST LLEGADA ===');
-    }
-  }
-
-  async onFinalizarEmbarque() {
-    try {
-      const result = await this.shipmentsDriverService.finalizarEmbarque(this.embarqueId).toPromise();
-      if (result?.success) {
-        this.currentEstado.set('completado');
-        this.estadoChange.emit('completado');
-        this.updateProgress();
-        this.deliveryCompleted.emit();
-        this.messageService.add({
-          severity: 'success',
-          summary: '¡Embarque Finalizado!',
-          detail: 'El proceso de entrega se ha completado exitosamente'
-        });
-        
-        // Cerrar wizard después de un momento
-        setTimeout(() => {
-          this.cancel();
-        }, 2000);
-      }
-    } catch (error: any) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Error',
-        detail: error.message || 'No se pudo finalizar el embarque'
-      });
     }
   }
 
@@ -1115,41 +1073,112 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
   }
 
   updateRespuestaLlegada(itemId: string, valor: any) {
-    this.respuestasLlegada.update(respuestas => ({
-      ...respuestas,
-      [itemId]: valor
-    }));
+    console.log(`[updateRespuestaLlegada] itemId: ${itemId}, valor:`, valor);
+    this.respuestasLlegada.update(respuestas => {
+      const nuevo = { ...respuestas, [itemId]: valor };
+      console.log(`[updateRespuestaLlegada] nuevo estado:`, nuevo);
+      return nuevo;
+    });
     this.cambiosPendientes.set(true);
   }
 
+  // Solo guarda progreso SIN completar el checklist
   async guardarChecklistTemporal() {
     this.guardando.set(true);
-    console.log('=== GUARDAR CHECKLIST TEMPORAL ===');
-    console.log('Estado actual:', this.currentEstado());
-    console.log('Respuestas salida:', this.respuestasSalida());
-    console.log('Respuestas llegada:', this.respuestasLlegada());
-    
+    console.log('=== GUARDAR PROGRESO TEMPORAL ===');
+    console.log('[guardarChecklistTemporal] estado actual:', this.currentEstado());
+    console.log('[guardarChecklistTemporal] checklistSalida existe:', !!this.checklistSalida());
+    console.log('[guardarChecklistTemporal] checklistLlegada existe:', !!this.checklistLlegada());
+
     try {
+      if (!this.checklistSalida() && !this.checklistLlegada()) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Sin checklist',
+          detail: 'No hay checklist cargado aún'
+        });
+        return;
+      }
+
       if ((this.currentEstado() === 'checklist_salida' || this.currentEstado() === 'programado') && this.checklistSalida()) {
-        console.log('Guardando checklist salida ID:', this.checklistSalida()!.id);
-        const result = await this.checklistService.updateRespuestas(
+        console.log('Guardando progreso checklist salida ID:', this.checklistSalida()!.id);
+        await this.checklistService.updateRespuestas(
           this.checklistSalida()!.id,
           this.respuestasSalida()
         ).toPromise();
-        console.log('Resultado guardado:', result);
 
-        // Completar checklist y cambiar estado
-        console.log('Marcando checklist como completado...');
+        this.cambiosPendientes.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Progreso guardado',
+          detail: 'Tu avance ha sido guardado. Puedes continuar después.'
+        });
+      } else if (this.currentEstado() === 'checklist_llegada' && this.checklistLlegada()) {
+        console.log('Guardando progreso checklist llegada ID:', this.checklistLlegada()!.id);
+        console.log('[guardarChecklistTemporal] respuestasLlegada a enviar:', this.respuestasLlegada());
+        console.log('[guardarChecklistTemporal] estructura del checklist:', this.checklistLlegada()?.estructura);
+        const result = await this.checklistService.updateRespuestas(
+          this.checklistLlegada()!.id,
+          this.respuestasLlegada()
+        ).toPromise();
+        console.log('[guardarChecklistTemporal] resultado:', result);
+
+        this.cambiosPendientes.set(false);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Progreso guardado',
+          detail: 'Tu avance ha sido guardado. Puedes continuar después.'
+        });
+      }
+    } catch (error) {
+      console.error('Error guardando progreso:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se pudo guardar el progreso'
+      });
+    } finally {
+      this.guardando.set(false);
+      console.log('=== FIN GUARDAR PROGRESO ===');
+    }
+  }
+
+  // Completa el checklist y avanza al siguiente paso
+  async completarChecklistYContinuar() {
+    this.guardando.set(true);
+    console.log('=== COMPLETAR CHECKLIST ===');
+
+    try {
+      if ((this.currentEstado() === 'checklist_salida' || this.currentEstado() === 'programado') && this.checklistSalida()) {
+        // Validar que esté completo
+        const validacion = this.checklistService.validateCompleteness({
+          ...this.checklistSalida()!,
+          respuestas: this.respuestasSalida()
+        });
+
+        if (!validacion.valid) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Checklist incompleto',
+            detail: `Faltan campos: ${validacion.missing.join(', ')}`
+          });
+          return;
+        }
+
+        // Guardar respuestas
+        await this.checklistService.updateRespuestas(
+          this.checklistSalida()!.id,
+          this.respuestasSalida()
+        ).toPromise();
+
+        // Completar checklist
         await this.checklistService.complete(this.checklistSalida()!.id).toPromise();
-        console.log('Checklist completado');
 
         // Confirmar salida
-        console.log('Confirmando salida del embarque...');
         const resultSalida = await this.shipmentsDriverService.confirmarSalida(
           this.embarqueId,
           this.checklistSalida()!.id
         ).toPromise();
-        console.log('Resultado confirmar salida:', resultSalida);
 
         if (resultSalida?.success) {
           this.currentEstado.set('en_transito');
@@ -1160,57 +1189,66 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
             summary: '¡Listo para salir!',
             detail: 'El checklist de salida ha sido completado. Puedes comenzar tu viaje.'
           });
-          // Cerrar el wizard
           this.cancel();
         }
       } else if (this.currentEstado() === 'checklist_llegada' && this.checklistLlegada()) {
-        console.log('Guardando checklist llegada ID:', this.checklistLlegada()!.id);
-        const result = await this.checklistService.updateRespuestas(
+        // Validar que esté completo
+        console.log('[completarChecklistYContinuar] respuestasLlegada actual:', this.respuestasLlegada());
+        console.log('[completarChecklistYContinuar] checklistLlegada estructura:', this.checklistLlegada()?.estructura);
+
+        const validacion = this.checklistService.validateCompleteness({
+          ...this.checklistLlegada()!,
+          respuestas: this.respuestasLlegada()
+        });
+
+        console.log('[completarChecklistYContinuar] resultado validacion:', validacion);
+
+        if (!validacion.valid) {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Checklist incompleto',
+            detail: `Faltan campos: ${validacion.missing.join(', ')}`
+          });
+          return;
+        }
+
+        // Guardar respuestas
+        await this.checklistService.updateRespuestas(
           this.checklistLlegada()!.id,
           this.respuestasLlegada()
         ).toPromise();
-        console.log('Resultado guardado:', result);
 
-        // Completar checklist y cambiar estado
-        console.log('Marcando checklist como completado...');
+        // Completar checklist
         await this.checklistService.complete(this.checklistLlegada()!.id).toPromise();
-        console.log('Checklist completado');
 
-        // Completar checklist de llegada
-        console.log('Confirmando llegada del embarque...');
+        // Confirmar llegada
         const resultLlegada = await this.shipmentsDriverService.completarChecklistLlegada(
           this.embarqueId,
           this.checklistLlegada()!.id
         ).toPromise();
-        console.log('Resultado confirmar llegada:', resultLlegada);
 
         if (resultLlegada?.success) {
-          this.currentEstado.set('costos_pendientes');
-          this.estadoChange.emit('costos_pendientes');
+          this.currentEstado.set('completado');
+          this.estadoChange.emit('completado');
           this.updateProgress();
           this.messageService.add({
             severity: 'success',
             summary: 'Checklist Completado',
-            detail: 'Los costos han sido registrados. Puedes finalizar el embarque.'
+            detail: 'Has completado tu parte del envío. El operador finalizará el embarque.'
           });
-          // Cerrar el wizard
           this.cancel();
         }
-      } else {
-        console.log('No se cumplieron condiciones para guardar. Estado:', this.currentEstado(), 'ChecklistSalida:', this.checklistSalida(), 'ChecklistLlegada:', this.checklistLlegada());
       }
-      
-      this.cambiosPendientes.set(false);
     } catch (error) {
-      console.error('Error guardando checklist:', error);
+      console.error('Error completando checklist:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo guardar el progreso'
+        detail: 'No se pudo completar el checklist'
       });
     } finally {
       this.guardando.set(false);
-      console.log('=== FIN GUARDAR CHECKLIST ===');
+      console.log('=== FIN COMPLETAR CHECKLIST ===');
     }
   }
 
@@ -1285,15 +1323,31 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
   }
 
   async guardarFirma(tipo: 'salida' | 'llegada') {
+    console.log('=== GUARDAR FIRMA ===');
     const canvasId = tipo === 'salida' ? 'firmaCanvas' : 'firmaCanvasLlegada';
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-    if (!canvas) return;
+    if (!canvas) {
+      console.error('Canvas no encontrado:', canvasId);
+      return;
+    }
 
     const base64 = canvas.toDataURL('image/png');
+    console.log('Base64 generado, length:', base64.length);
     
     // Subir como foto
     const user = this.authService.user();
-    if (!user?.sub) return;
+    console.log('User:', user?.sub);
+    if (!user?.sub) {
+      console.error('No hay usuario logueado');
+      return;
+    }
+
+    console.log('Datos para subir:', {
+      embarqueId: this.embarqueId,
+      guiaId: this.guiaId,
+      choferId: user.sub,
+      tipo: 'general'
+    });
 
     try {
       const foto = await this.fotosService.uploadFotoBase64(
@@ -1304,11 +1358,36 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
         'general'
       ).toPromise();
 
+      console.log('Foto guardada:', foto);
+
       // Guardar referencia en respuestas
+      // Usar el ID correcto según el tipo de checklist
+      const firmaKey = tipo === 'salida' ? 'firma' : 'firma_operador';
+
       if (tipo === 'salida') {
-        this.respuestasSalida.update(r => ({ ...r, firma: foto?.url }));
+        // Construir objeto una sola vez para evitar datos stale
+        const respuestasActualizadas = { ...this.respuestasSalida(), [firmaKey]: foto?.url };
+        this.respuestasSalida.set(respuestasActualizadas);
+        // Guardar checklist automáticamente en backend
+        if (this.checklistSalida()?.id) {
+          await this.checklistService.updateRespuestas(
+            this.checklistSalida()!.id,
+            respuestasActualizadas
+          ).toPromise();
+          console.log('Checklist salida actualizado con firma en backend');
+        }
       } else {
-        this.respuestasLlegada.update(r => ({ ...r, firma: foto?.url }));
+        // Construir objeto una sola vez para evitar datos stale
+        const respuestasActualizadas = { ...this.respuestasLlegada(), [firmaKey]: foto?.url };
+        this.respuestasLlegada.set(respuestasActualizadas);
+        // Guardar checklist automáticamente en backend
+        if (this.checklistLlegada()?.id) {
+          await this.checklistService.updateRespuestas(
+            this.checklistLlegada()!.id,
+            respuestasActualizadas
+          ).toPromise();
+          console.log('Checklist llegada actualizado con firma en backend');
+        }
       }
 
       this.messageService.add({
@@ -1316,20 +1395,22 @@ export class DeliveryWizardComponent implements OnInit, OnChanges {
         summary: 'Firma Guardada',
         detail: 'La firma se ha guardado correctamente'
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error guardando firma:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'No se pudo guardar la firma'
+        detail: error.message || 'No se pudo guardar la firma'
       });
     }
+    console.log('=== FIN GUARDAR FIRMA ===');
   }
 
   // ===== UTILIDADES =====
 
   updateProgress() {
     const estado = this.currentEstado();
-    const estadosOrden: ShipmentEstado[] = ['programado', 'checklist_salida', 'en_transito', 'fotos_entrega', 'checklist_llegada', 'costos_pendientes', 'completado'];
+    const estadosOrden: ShipmentEstado[] = ['programado', 'checklist_salida', 'en_transito', 'fotos_entrega', 'checklist_llegada', 'completado'];
     const index = estadosOrden.indexOf(estado);
     const progress = index >= 0 ? Math.round(((index + 1) / estadosOrden.length) * 100) : 0;
     this.progress.set(progress);

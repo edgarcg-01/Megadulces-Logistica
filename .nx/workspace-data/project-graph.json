@@ -20441,6 +20441,11 @@
       },
       {
         "source": "logistica-api",
+        "target": "shared-auth",
+        "type": "static"
+      },
+      {
+        "source": "logistica-api",
         "target": "npm:@nestjs/passport",
         "type": "static"
       },
@@ -20452,11 +20457,6 @@
       {
         "source": "logistica-api",
         "target": "npm:@nestjs/swagger",
-        "type": "static"
-      },
-      {
-        "source": "logistica-api",
-        "target": "shared-auth",
         "type": "static"
       },
       {
@@ -51114,5 +51114,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1777392653683
+  "computedAt": 1777566302306
 }

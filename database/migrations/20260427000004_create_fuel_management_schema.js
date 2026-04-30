@@ -21,7 +21,6 @@ exports.up = async function(knex) {
     // Información de kilometraje
     table.integer('km_inicial').defaultTo(0);
     table.integer('km_final').defaultTo(0);
-    table.integer('km_recorridos').virtual();
     table.decimal('rendimiento_real', 8, 2).defaultTo(0); // km/l
     
     // Ubicación y método de registro

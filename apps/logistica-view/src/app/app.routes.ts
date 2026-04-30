@@ -56,6 +56,26 @@ export const appRoutes: Route[] = [
         path: 'driver-assignments',
         loadComponent: () => import('./features/driver-assignments/driver-assignments.component').then(m => m.DriverAssignmentsComponent)
       },
+      {
+        path: 'profile',
+        canActivate: [driverGuard],
+        loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent)
+      },
+      {
+        path: 'profile/password',
+        canActivate: [driverGuard],
+        loadComponent: () => import('./features/profile/password/password.component').then(m => m.PasswordComponent)
+      },
+      {
+        path: 'admin/users',
+        canActivate: [driverGuard],
+        loadComponent: () => import('./features/admin/users/users.component').then(m => m.UsersComponent)
+      },
+      {
+        path: 'admin/settings',
+        canActivate: [driverGuard],
+        loadComponent: () => import('./features/admin/settings/settings.component').then(m => m.SettingsComponent)
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
     ]
   },

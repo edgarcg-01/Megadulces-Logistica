@@ -123,7 +123,9 @@ import { FilterBarComponent } from '../../shared/components/ui/filter-bar.compon
                 <tr class="hover-lift">
                   <td>
                     <span class="folio-badge">{{ shipment.folio }}</span>
-                    <p class="text-[9px] font-bold text-content-faint mt-0.5 uppercase tracking-tighter">{{ shipment.fecha | date:'dd MMM' }}</p>
+                    <p class="text-[9px] font-bold text-content-faint mt-0.5 uppercase tracking-tighter">
+                      {{ (shipment.fecha_hora_creacion || shipment.fecha) | date:'dd MMM, HH:mm' }}
+                    </p>
                   </td>
                   <td>
                     <span class="text-xs font-black text-content-main uppercase leading-tight block">{{ shipment.destino }}</span>
@@ -131,7 +133,7 @@ import { FilterBarComponent } from '../../shared/components/ui/filter-bar.compon
                   </td>
                   <td class="text-center">
                     <span class="status-chip chip-{{ getEstadoSeverity(shipment.estado) }} !text-[9px] !px-2">
-                      {{ shipment.estado }}
+                      {{ getEstadoLabel(shipment.estado) }}
                     </span>
                   </td>
                   <td class="text-right font-mono text-xs font-black text-blue-600">
@@ -287,12 +289,17 @@ export class DashboardComponent implements OnInit {
       }
     });
 
-    // Cargar embarques recientes
+    // Cargar embarques recientes de TODOS los módulos para el dashboard
     this.shipmentsService.findAll().pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (data) => {
-        this.recentShipments.set(data.slice(0, 10));
+        // Mostrar TODOS los embarques sin importar su estado
+        // Ordenar por fecha más reciente
+        const ordenados = data.sort((a: any, b: any) =>
+          new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+        );
+        this.recentShipments.set(ordenados.slice(0, 10));
         // Calcular top routes desde los embarques
         this.calculateTopRoutes(data);
       },
@@ -422,10 +429,40 @@ export class DashboardComponent implements OnInit {
   getEstadoSeverity(estado: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast' {
     const severityMap: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast'> = {
       'completado': 'success',
-      'transito': 'info',
-      'programado': 'secondary',
-      'cancelado': 'danger'
+      'completada': 'success',
+      'entregado': 'success',
+      'programado': 'info',
+      'programada': 'info',
+      'checklist_salida': 'warn',
+      'en_transito': 'warn',
+      'transito': 'warn',
+      'en tránsito': 'warn',
+      'fotos_entrega': 'info',
+      'checklist_llegada': 'info',
+      'costos_pendientes': 'secondary',
+      'cancelado': 'danger',
+      'cancelada': 'danger'
     };
-    return severityMap[estado] || 'secondary';
+    return severityMap[estado.toLowerCase()] || 'secondary';
+  }
+
+  getEstadoLabel(estado: string): string {
+    const labelMap: Record<string, string> = {
+      'completado': 'Completado',
+      'completada': 'Completado',
+      'entregado': 'Entregado',
+      'programado': 'Programado',
+      'programada': 'Programado',
+      'checklist_salida': 'Checklist Salida',
+      'en_transito': 'En Tránsito',
+      'transito': 'En Tránsito',
+      'en tránsito': 'En Tránsito',
+      'fotos_entrega': 'Fotos Entrega',
+      'checklist_llegada': 'Checklist Llegada',
+      'costos_pendientes': 'Costos Pendientes',
+      'cancelado': 'Cancelado',
+      'cancelada': 'Cancelado'
+    };
+    return labelMap[estado.toLowerCase()] || estado;
   }
 }

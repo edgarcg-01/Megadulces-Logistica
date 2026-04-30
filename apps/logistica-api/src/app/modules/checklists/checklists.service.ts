@@ -48,7 +48,7 @@ export class ChecklistsService {
         embarque_id: embarqueId,
         chofer_id: choferId,
         tipo: tipo,
-        respuestas: JSON.stringify(respuestas),
+        respuestas: respuestas, // Knex maneja JSONB automáticamente
         completado: false,
         created_at: new Date(),
         updated_at: new Date(),
@@ -57,7 +57,25 @@ export class ChecklistsService {
 
     return {
       ...checklist,
-      respuestas: respuestas,
+      respuestas: typeof checklist.respuestas === 'string' ? JSON.parse(checklist.respuestas) : checklist.respuestas,
+      estructura: config,
+    };
+  }
+
+  async getChecklistById(checklistId: string) {
+    const checklist = await this.knex('logistica_checklists')
+      .where('id', checklistId)
+      .first();
+
+    if (!checklist) {
+      return null;
+    }
+
+    const config = CHECKLIST_ITEMS_CONFIG[checklist.tipo as ChecklistTipo];
+
+    return {
+      ...checklist,
+      respuestas: typeof checklist.respuestas === 'string' ? JSON.parse(checklist.respuestas) : checklist.respuestas,
       estructura: config,
     };
   }
@@ -73,12 +91,10 @@ export class ChecklistsService {
 
     // Combinar con la configuración para enviar al frontend
     const config = CHECKLIST_ITEMS_CONFIG[tipo];
-    
+
     return {
       ...checklist,
-      respuestas: typeof checklist.respuestas === 'string' 
-        ? JSON.parse(checklist.respuestas) 
-        : checklist.respuestas,
+      respuestas: typeof checklist.respuestas === 'string' ? JSON.parse(checklist.respuestas) : checklist.respuestas,
       estructura: config,
     };
   }
@@ -88,8 +104,11 @@ export class ChecklistsService {
     respuestas: Record<string, any>,
     fotos?: string[]
   ) {
+    console.log('updateChecklistRespuestas - ID:', checklistId);
+    console.log('updateChecklistRespuestas - respuestas recibidas:', respuestas);
+    
     const updateData: any = {
-      respuestas: JSON.stringify(respuestas),
+      respuestas: respuestas, // Knex maneja JSONB automáticamente
       updated_at: new Date(),
     };
 
@@ -100,18 +119,23 @@ export class ChecklistsService {
         .first();
       
       const fotosExistentes = checklist?.fotos_danos 
-        ? JSON.parse(checklist.fotos_danos) 
+        ? (typeof checklist.fotos_danos === 'string' ? JSON.parse(checklist.fotos_danos) : checklist.fotos_danos)
         : [];
       
-      updateData.fotos_danos = JSON.stringify([...fotosExistentes, ...fotos]);
+      updateData.fotos_danos = [...fotosExistentes, ...fotos];
     }
 
     const [updated] = await this.knex('logistica_checklists')
       .where('id', checklistId)
       .update(updateData)
       .returning('*');
+    
+    console.log('updateChecklistRespuestas - resultado:', updated);
 
-    return updated;
+    return {
+      ...updated,
+      respuestas: typeof updated.respuestas === 'string' ? JSON.parse(updated.respuestas) : updated.respuestas,
+    };
   }
 
   async completeChecklist(checklistId: string) {
@@ -126,9 +150,7 @@ export class ChecklistsService {
 
     return {
       ...checklist,
-      respuestas: typeof checklist.respuestas === 'string' 
-        ? JSON.parse(checklist.respuestas) 
-        : checklist.respuestas,
+      respuestas: typeof checklist.respuestas === 'string' ? JSON.parse(checklist.respuestas) : checklist.respuestas,
     };
   }
 
@@ -141,9 +163,7 @@ export class ChecklistsService {
       return false;
     }
 
-    const respuestas = typeof checklist.respuestas === 'string'
-      ? JSON.parse(checklist.respuestas)
-      : checklist.respuestas;
+    const respuestas = typeof checklist.respuestas === 'string' ? JSON.parse(checklist.respuestas) : checklist.respuestas;
 
     const config = CHECKLIST_ITEMS_CONFIG[checklist.tipo as ChecklistTipo];
     
@@ -208,9 +228,7 @@ export class ChecklistsService {
 
     return checklists.map(c => ({
       ...c,
-      respuestas: typeof c.respuestas === 'string' 
-        ? JSON.parse(c.respuestas) 
-        : c.respuestas,
+      respuestas: typeof c.respuestas === 'string' ? JSON.parse(c.respuestas) : c.respuestas,
     }));
   }
 }

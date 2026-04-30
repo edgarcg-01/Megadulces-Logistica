@@ -22,6 +22,7 @@ export interface Foto {
   public_id: string;
   metadata?: FotoMetadata;
   fecha_subida: string;
+  fecha_hora_subida?: string; // Fecha y hora completas de subida
   created_at: string;
   updated_at: string;
 }

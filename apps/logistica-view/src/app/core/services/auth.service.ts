@@ -8,6 +8,7 @@ export interface JwtPayload {
   sub: string;
   username: string;
   role_name: string;
+  roles?: string[]; // Roles secundarios
   permissions: Record<string, boolean>;
   iat: number;
   exp: number;
@@ -82,6 +83,16 @@ export class AuthService {
   hasPermission(permission: string): boolean {
     const user = this.user();
     if (!user) return false;
-    return user.permissions?.[permission] === true || user.role_name === 'superadmin';
+    // Verificar rol principal y roles secundarios
+    const allUserRoles = [user.role_name, ...(user.roles || [])];
+    return user.permissions?.[permission] === true || allUserRoles.includes('superadmin');
+  }
+
+  hasRole(role: string): boolean {
+    const user = this.user();
+    if (!user) return false;
+    // Verificar rol principal y roles secundarios
+    const allUserRoles = [user.role_name, ...(user.roles || [])];
+    return allUserRoles.includes(role);
   }
 }

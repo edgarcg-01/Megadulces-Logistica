@@ -8,8 +8,11 @@ export const driverGuard: CanActivateFn = (route, state) => {
   
   const user = authService.user();
   
-  // Si el usuario es chofer, solo permitir acceso a driver-assignments
-  if (user?.role_name === 'chofer') {
+  // Verificar rol principal y roles secundarios
+  const allUserRoles = [user?.role_name, ...(user?.roles || [])];
+  
+  // Si el usuario es chofer (incluyendo roles secundarios), solo permitir acceso a driver-assignments
+  if (allUserRoles.includes('chofer')) {
     const allowedPath = '/driver-assignments';
     const currentPath = state.url;
     

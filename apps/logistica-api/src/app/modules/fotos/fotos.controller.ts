@@ -88,10 +88,24 @@ export class FotosController {
     );
   }
 
+  @Get('validar/:embarqueId')
+  @ApiOperation({ summary: 'Validar que existan las fotos requeridas (entrega firmada e INE)' })
+  async validarFotosRequeridas(@Param('embarqueId') embarqueId: string) {
+    return this.fotosService.validarFotosRequeridas(embarqueId);
+  }
+
   @Get(':embarqueId')
   @ApiOperation({ summary: 'Obtener todas las fotos de un embarque' })
   async getFotosByEmbarque(@Param('embarqueId') embarqueId: string) {
-    return this.fotosService.getFotosByEmbarque(embarqueId);
+    console.log('Controller: getFotosByEmbarque llamado con embarqueId:', embarqueId);
+    try {
+      const result = await this.fotosService.getFotosByEmbarque(embarqueId);
+      console.log('Controller: Resultado de getFotosByEmbarque:', result);
+      return result;
+    } catch (error: any) {
+      console.error('Controller: Error en getFotosByEmbarque:', error);
+      throw error;
+    }
   }
 
   @Get(':embarqueId/:tipo')
@@ -101,12 +115,6 @@ export class FotosController {
     @Param('tipo') tipo: FotoTipo,
   ) {
     return this.fotosService.getFotosByEmbarqueAndTipo(embarqueId, tipo);
-  }
-
-  @Get('validar/:embarqueId')
-  @ApiOperation({ summary: 'Validar que existan las fotos requeridas (entrega firmada e INE)' })
-  async validarFotosRequeridas(@Param('embarqueId') embarqueId: string) {
-    return this.fotosService.validarFotosRequeridas(embarqueId);
   }
 
   @Delete(':id')

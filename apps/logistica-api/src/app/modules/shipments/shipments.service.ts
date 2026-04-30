@@ -58,6 +58,7 @@ export class ShipmentsService {
       } = data;
       
       // 2. Mapear y limpiar datos para la tabla principal 'logistica_embarques'
+      const now = new Date();
       const shipmentData = {
         folio: rawShipmentData.folio,
         fecha: rawShipmentData.fecha,
@@ -73,8 +74,9 @@ export class ShipmentsService {
         peso: rawShipmentData.peso || 0,
         tipo: rawShipmentData.tipo || 'entrega',
         estado: rawShipmentData.estado || 'programado',
-        created_at: new Date(),
-        updated_at: new Date(),
+        fecha_hora_creacion: now, // Fecha y hora de creación
+        created_at: now,
+        updated_at: now,
       };
 
       // 3. Insertar Embarque
@@ -247,7 +249,7 @@ export class ShipmentsService {
     return { success: true, estado: 'checklist_salida' };
   }
 
-  async confirmarSalida(embarqueId: string, checklistId: string) {
+  async confirmarSalida(embarqueId: string, checklistId: string, userId?: string) {
     // Validar que el checklist de salida esté completado
     const checklist = await this.knex('logistica_checklists')
       .where('id', checklistId)
@@ -257,16 +259,22 @@ export class ShipmentsService {
       throw new Error('El checklist de salida no está completado');
     }
 
-    // Actualizar estado a en_transito
+    const now = new Date();
+
+    // Actualizar estado a en_transito con fecha/hora de salida
     await this.knex('logistica_embarques')
       .where('id', embarqueId)
       .update({
         estado: 'en_transito',
-        fecha_salida: new Date(),
-        updated_at: new Date(),
+        fecha_hora_salida: now,
+        fecha_salida: now,
+        updated_at: now,
       });
 
-    return { success: true, estado: 'en_transito' };
+    // Registrar en historial
+    await this.registrarHistorial(embarqueId, 'checklist_salida', 'en_transito', now, userId, 'Salida confirmada por chofer');
+
+    return { success: true, estado: 'en_transito', fecha_hora_salida: now };
   }
 
   async subirFotosEntrega(embarqueId: string) {
@@ -297,19 +305,25 @@ export class ShipmentsService {
       throw new Error('Debe subir la foto de la entrega firmada y la INE del receptor');
     }
 
+    const now = new Date();
+
     // Actualizar estado
     await this.knex('logistica_embarques')
       .where('id', embarqueId)
       .update({
         estado: 'checklist_llegada',
-        fecha_llegada: new Date(),
-        updated_at: new Date(),
+        fecha_hora_llegada: now,
+        fecha_llegada: now,
+        updated_at: now,
       });
 
-    return { success: true, estado: 'checklist_llegada' };
+    // Registrar en historial
+    await this.registrarHistorial(embarqueId, 'fotos_entrega', 'checklist_llegada', now, undefined, 'Entrega confirmada, iniciando checklist de llegada');
+
+    return { success: true, estado: 'checklist_llegada', fecha_hora_llegada: now };
   }
 
-  async completarChecklistLlegada(embarqueId: string, checklistId: string) {
+  async completarChecklistLlegada(embarqueId: string, checklistId: string, userId?: string) {
     // Validar que el checklist de llegada esté completado
     const checklist = await this.knex('logistica_checklists')
       .where('id', checklistId)
@@ -319,13 +333,25 @@ export class ShipmentsService {
       throw new Error('El checklist de llegada no está completado');
     }
 
+    const now = new Date();
+
     // Actualizar estado a costos_pendientes (que usa el módulo de costs existente)
     await this.knex('logistica_embarques')
       .where('id', embarqueId)
       .update({
         estado: 'costos_pendientes',
-        updated_at: new Date(),
+        updated_at: now,
       });
+
+    // Actualizar fecha_hora_completado del checklist
+    await this.knex('logistica_checklists')
+      .where('id', checklistId)
+      .update({
+        fecha_hora_completado: now,
+      });
+
+    // Registrar en historial
+    await this.registrarHistorial(embarqueId, 'checklist_llegada', 'costos_pendientes', now, userId, 'Checklist de llegada completado por chofer');
 
     return { success: true, estado: 'costos_pendientes' };
   }
@@ -346,12 +372,15 @@ export class ShipmentsService {
       throw new Error('No se han generado costos para este embarque');
     }
 
+    const now = new Date();
+
     // Actualizar estado a completado
     await this.knex('logistica_embarques')
       .where('id', embarqueId)
       .update({
         estado: 'completado',
-        updated_at: new Date(),
+        fecha_hora_completado: now,
+        updated_at: now,
       });
 
     // También marcar la guía como completada
@@ -359,9 +388,38 @@ export class ShipmentsService {
       .where('embarque_id', embarqueId)
       .update({
         estado: 'completada',
-        updated_at: new Date(),
+        updated_at: now,
       });
 
-    return { success: true, estado: 'completado' };
+    // Registrar en historial
+    await this.registrarHistorial(embarqueId, 'costos_pendientes', 'completado', now, undefined, 'Embarque finalizado por operador');
+
+    return { success: true, estado: 'completado', fecha_hora_completado: now };
+  }
+
+  // ========== MÉTODO PRIVADO PARA REGISTRAR HISTORIAL ==========
+
+  private async registrarHistorial(
+    embarqueId: string, 
+    estadoAnterior: string, 
+    estadoNuevo: string, 
+    fechaHora: Date, 
+    usuarioId?: string,
+    observaciones?: string
+  ) {
+    try {
+      await this.knex('logistica_embarque_historial').insert({
+        embarque_id: embarqueId,
+        estado_anterior: estadoAnterior,
+        estado_nuevo: estadoNuevo,
+        fecha_hora: fechaHora,
+        usuario_id: usuarioId || null,
+        observaciones: observaciones || null,
+      });
+      console.log(`Historial registrado: ${estadoAnterior} -> ${estadoNuevo} para embarque ${embarqueId}`);
+    } catch (error) {
+      console.error('Error registrando historial:', error);
+      // No lanzamos error para no interrumpir el flujo principal
+    }
   }
 }

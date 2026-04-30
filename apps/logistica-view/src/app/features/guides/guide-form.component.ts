@@ -35,7 +35,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 export class GuideFormComponent implements OnInit {
   guideToEdit = input<any>();
   prefillFromShipment = input<any>();
-  saved = output<void>();
+  saved = output<any>();
   canceled = output<void>();
 
   private fb = inject(FormBuilder);
@@ -333,15 +333,15 @@ export class GuideFormComponent implements OnInit {
       : this.guidesService.create(guideData);
 
     action$.subscribe({
-      next: () => {
+      next: (savedGuide) => {
         this.saving.set(false);
-        this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Éxito', 
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
             detail: isEdit ? 'Guía actualizada correctamente' : 'Guía guardada correctamente',
             life: 3000
         });
-        this.saved.emit();
+        this.saved.emit(savedGuide);
       },
       error: () => {
         this.saving.set(false);

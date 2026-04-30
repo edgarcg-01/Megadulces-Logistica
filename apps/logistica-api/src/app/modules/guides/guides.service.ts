@@ -58,6 +58,10 @@ export class GuidesService {
   }
 
   async updateStatus(id: string, estado: string) {
-    return this.knex('logistica_guias').where({ id }).update({ estado, updated_at: new Date() });
+    const [guia] = await this.knex('logistica_guias')
+      .where({ id })
+      .update({ estado, updated_at: new Date() })
+      .returning('*');
+    return guia;
   }
 }

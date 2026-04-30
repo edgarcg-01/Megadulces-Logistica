@@ -7,8 +7,13 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ShipmentsService, FleetService, CostsService, GuidesService, StaffService } from '../../core/services/logistics.service';
+import { FotosService, Foto } from '../../core/services/fotos.service';
+import { ChecklistService, Checklist } from '../../core/services/checklist.service';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ReportPrintComponent } from './report-print.component';
@@ -45,11 +50,12 @@ interface ReporteUnidad {
     ButtonModule,
     TableModule,
     DatePickerModule,
-    TableModule,
-    DatePickerModule,
     SelectModule,
     TooltipModule,
     DialogModule,
+    InputTextModule,
+    IconFieldModule,
+    InputIconModule,
     IconComponent,
     ReportPrintComponent
   ],
@@ -78,7 +84,7 @@ interface ReporteUnidad {
 
       <!-- Filters Area -->
       <div class="card-premium p-4">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div class="flex flex-col gap-1.5">
             <label class="text-[10px] font-black uppercase tracking-widest text-content-muted">Rango Desde</label>
             <p-datepicker [(ngModel)]="fechaDesde" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
@@ -104,6 +110,13 @@ interface ReporteUnidad {
                 </div>
               </ng-template>
             </p-select>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-black uppercase tracking-widest text-content-muted">Buscar Folio / Ruta</label>
+            <p-iconField iconPosition="left">
+              <p-inputIcon styleClass="pi pi-search" />
+              <input type="text" pInputText [(ngModel)]="filtroBusqueda" (ngModelChange)="onBusquedaChange($event)" placeholder="Ej: EMB-001 o CDMX..." class="w-full" />
+            </p-iconField>
           </div>
           <div class="flex gap-2">
             <p-button label="Analizar" icon="pi pi-chart-bar" styleClass="p-button-brand flex-1" (onClick)="generarReporte()" />
@@ -177,7 +190,12 @@ interface ReporteUnidad {
         <p-table
           [value]="reporteEmbarques()"
           styleClass="p-datatable-modern"
-          [rowHover]="true">
+          [rowHover]="true"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} embarques">
           <ng-template #header>
             <tr>
               <th class="text-left text-label">Folio</th>
@@ -262,7 +280,12 @@ interface ReporteUnidad {
         <p-table
           [value]="reporteUnidades()"
           styleClass="p-datatable-modern"
-          [rowHover]="true">
+          [rowHover]="true"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[5, 10, 20, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} unidades">
           <ng-template #header>
             <tr>
               <th class="text-left text-label">Placa</th>
@@ -357,8 +380,8 @@ interface ReporteUnidad {
                 <p class="font-mono font-bold text-content-main">{{ detallesEmbarque().folio }}</p>
               </div>
               <div>
-                <p class="text-[9px] font-black text-content-faint uppercase mb-1">Fecha</p>
-                <p class="font-mono text-sm text-content-main">{{ detallesEmbarque().fecha | date:'dd/MM/yyyy' }}</p>
+                <p class="text-[9px] font-black text-content-faint uppercase mb-1">Fecha Creación</p>
+                <p class="font-mono text-sm text-content-main">{{ (detallesEmbarque().fecha_hora_creacion || detallesEmbarque().fecha) | date:'dd/MM/yyyy HH:mm' }}</p>
               </div>
               <div>
                 <p class="text-[9px] font-black text-content-faint uppercase mb-1">Origen</p>
@@ -389,6 +412,294 @@ interface ReporteUnidad {
             </div>
           </div>
 
+          <!-- Checklist de Salida -->
+          @if (detallesChecklistSalida()) {
+            <div class="card-premium p-4">
+              <div class="flex items-center gap-2 mb-4">
+                <app-icon name="clipboard-list" class="text-brand"></app-icon>
+                <h3 class="font-bold text-content-main uppercase tracking-widest text-xs">Checklist de Salida</h3>
+                @if (detallesChecklistSalida()?.completado) {
+                  <span class="status-chip chip-success !text-[9px]">Completado</span>
+                } @else {
+                  <span class="status-chip chip-warn !text-[9px]">Pendiente</span>
+                }
+              </div>
+              <!-- Datos del Checklist -->
+              @if (detallesChecklistSalida()?.respuestas || detallesChecklistSalida()?.items) {
+                <div class="space-y-3">
+                  <!-- Formato con estructura categorizada -->
+                  @if (detallesChecklistSalida()?.estructura) {
+                    @for (categoria of detallesChecklistSalida()?.estructura; track categoria.categoria) {
+                      <div class="border border-divider rounded-lg overflow-hidden">
+                        <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                          <p class="text-[10px] font-black text-content-main uppercase tracking-wider">{{ categoria.titulo }}</p>
+                        </div>
+                        <div class="p-3">
+                          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            @for (item of categoria.items; track item.id) {
+                              <div class="flex items-center justify-between p-2 rounded bg-surface-ground border border-divider">
+                                <div class="flex-1 min-w-0">
+                                  <p class="text-[9px] text-content-faint uppercase truncate">{{ item.descripcion }}</p>
+                                  <p class="font-bold text-content-main text-sm">
+                                    {{ detallesChecklistSalida()?.respuestas?.[item.id] || '-' }}
+                                  </p>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  }
+
+                  <!-- Formato plano con respuestas directas -->
+                  @if (detallesChecklistSalida()?.respuestas && !detallesChecklistSalida()?.estructura) {
+                    <div class="border border-divider rounded-lg overflow-hidden">
+                      <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                        <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                      </div>
+                      <div class="p-3">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          @for (respuesta of getRespuestasEntries(detallesChecklistSalida()?.respuestas); track respuesta[0]) {
+                            <div class="p-2 rounded bg-surface-ground border border-divider">
+                              <p class="text-[9px] text-content-faint uppercase">{{ respuesta[0] | titlecase }}</p>
+                              <p class="font-bold text-content-main text-sm">
+                                {{ respuesta[1] || '-' }}
+                              </p>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Formato plano con items array -->
+                  @if (detallesChecklistSalida()?.items && !detallesChecklistSalida()?.estructura) {
+                    <div class="border border-divider rounded-lg overflow-hidden">
+                      <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                        <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                      </div>
+                      <div class="p-3">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          @for (item of detallesChecklistSalida()?.items; track item.id) {
+                            <div class="p-2 rounded bg-surface-ground border border-divider flex items-center gap-2">
+                              <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                                   [class.bg-green-100]="item.completado"
+                                   [class.text-green-600]="item.completado"
+                                   [class.bg-red-100]="!item.completado"
+                                   [class.text-red-600]="!item.completado">
+                                {{ item.completado ? '✓' : '✗' }}
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <p class="text-[9px] text-content-faint uppercase truncate">{{ item.nombre || item.descripcion }}</p>
+                                @if (item.observaciones) {
+                                  <p class="text-[9px] text-content-muted truncate">{{ item.observaciones }}</p>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-center py-4">
+                  <app-icon name="clipboard-x" size="md" class="text-content-muted mb-2"></app-icon>
+                  <p class="text-content-muted text-sm">No hay datos del checklist disponibles</p>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Fotos de Entrega -->
+          <div class="card-premium p-4">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <app-icon name="camera" class="text-brand"></app-icon>
+                <h3 class="font-bold text-content-main uppercase tracking-widest text-xs">Evidencia de Entrega</h3>
+                @if (detallesFotos() && detallesFotos()!.length > 0) {
+                  <span class="text-[10px] text-content-muted">({{ detallesFotos()!.length }} fotos)</span>
+                } @else {
+                  <span class="text-[10px] text-content-muted">(Sin fotos)</span>
+                }
+              </div>
+              <p-button
+                label="Ver Fotos"
+                icon="pi pi-images"
+                [outlined]="true"
+                size="small"
+                (onClick)="abrirFotosDialog()" />
+            </div>
+            @if (detallesFotos() && detallesFotos()!.length > 0) {
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                @for (foto of detallesFotos(); track foto.id) {
+                  <div class="relative aspect-square rounded-lg overflow-hidden border border-divider group cursor-pointer" (click)="verFoto(foto)">
+                    <img [src]="foto.url" [alt]="foto.tipo" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black/60 p-1">
+                      <p class="text-[9px] text-white uppercase text-center">{{ foto.tipo }}</p>
+                      @if (foto.fecha_hora_subida || foto.fecha_subida) {
+                        <p class="text-[7px] text-white/70 text-center">
+                          {{ (foto.fecha_hora_subida || foto.fecha_subida) | date:'dd/MM HH:mm' }}
+                        </p>
+                      }
+                    </div>
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <app-icon name="eye" class="text-white"></app-icon>
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="text-center py-4 text-content-muted text-sm">
+                <app-icon name="camera-off" size="md" class="mb-2"></app-icon>
+                <p>No hay fotos de entrega registradas</p>
+              </div>
+            }
+          </div>
+
+          <!-- Checklist de Llegada -->
+          <div class="card-premium p-4">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <app-icon name="clipboard-check" class="text-brand"></app-icon>
+                <h3 class="font-bold text-content-main uppercase tracking-widest text-xs">Checklist de Llegada</h3>
+                @if (detallesChecklistLlegada()) {
+                  @if (detallesChecklistLlegada()?.completado) {
+                    <span class="status-chip chip-success !text-[9px]">Completado</span>
+                  } @else {
+                    <span class="status-chip chip-warn !text-[9px]">Pendiente</span>
+                  }
+                } @else {
+                  <span class="status-chip chip-secondary !text-[9px]">No registrado</span>
+                }
+              </div>
+              <p-button
+                label="Ver Detalle"
+                icon="pi pi-eye"
+                [outlined]="true"
+                size="small"
+                (onClick)="abrirChecklistDialog()" />
+            </div>
+            @if (detallesChecklistLlegada()) {
+
+              @if (detallesChecklistLlegada()?.respuestas || detallesChecklistLlegada()?.items) {
+                <div class="space-y-3">
+                  <!-- Formato con estructura categorizada -->
+                  @if (detallesChecklistLlegada()?.estructura) {
+                    @for (categoria of detallesChecklistLlegada()?.estructura; track categoria.categoria) {
+                      <div class="border border-divider rounded-lg overflow-hidden">
+                        <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                          <p class="text-[10px] font-black text-content-main uppercase tracking-wider">{{ categoria.titulo }}</p>
+                        </div>
+                        <div class="p-3">
+                          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            @for (item of categoria.items; track item.id) {
+                              <div class="flex items-center justify-between p-2 rounded bg-surface-ground border border-divider">
+                                <div class="flex-1 min-w-0">
+                                  <p class="text-[9px] text-content-faint uppercase truncate">{{ item.descripcion }}</p>
+                                  <p class="font-bold text-content-main text-sm">
+                                    {{ detallesChecklistLlegada()?.respuestas?.[item.id] || '-' }}
+                                  </p>
+                                </div>
+                              </div>
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  }
+
+                  <!-- Formato plano con respuestas directas -->
+                  @if (detallesChecklistLlegada()?.respuestas && !detallesChecklistLlegada()?.estructura) {
+                    <div class="border border-divider rounded-lg overflow-hidden">
+                      <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                        <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                      </div>
+                      <div class="p-3">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          @for (respuesta of getRespuestasEntries(detallesChecklistLlegada()?.respuestas); track respuesta[0]) {
+                            <div class="p-2 rounded bg-surface-ground border border-divider">
+                              <p class="text-[9px] text-content-faint uppercase">{{ respuesta[0] | titlecase }}</p>
+                              <p class="font-bold text-content-main text-sm">
+                                {{ respuesta[1] || '-' }}
+                              </p>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- Formato plano con items array -->
+                  @if (detallesChecklistLlegada()?.items && !detallesChecklistLlegada()?.estructura) {
+                    <div class="border border-divider rounded-lg overflow-hidden">
+                      <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                        <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                      </div>
+                      <div class="p-3">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          @for (item of detallesChecklistLlegada()?.items; track item.id) {
+                            <div class="p-2 rounded bg-surface-ground border border-divider flex items-center gap-2">
+                              <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold"
+                                   [class.bg-green-100]="item.completado"
+                                   [class.text-green-600]="item.completado"
+                                   [class.bg-red-100]="!item.completado"
+                                   [class.text-red-600]="!item.completado">
+                                {{ item.completado ? '✓' : '✗' }}
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <p class="text-[9px] text-content-faint uppercase truncate">{{ item.nombre || item.descripcion }}</p>
+                                @if (item.observaciones) {
+                                  <p class="text-[9px] text-content-muted truncate">{{ item.observaciones }}</p>
+                                }
+                              </div>
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="text-center py-4">
+                  <app-icon name="clipboard-x" size="md" class="text-content-muted mb-2"></app-icon>
+                  <p class="text-content-muted text-sm">No hay datos del checklist disponibles</p>
+                </div>
+              }
+            } @else {
+              <div class="text-center py-4 text-content-muted text-sm">
+                <app-icon name="clipboard-x" size="md" class="mb-2"></app-icon>
+                <p>Checklist de llegada no registrado</p>
+              </div>
+            }
+          </div>
+
+          <!-- Firma Digital -->
+          <div class="card-premium p-4">
+            <div class="flex items-center gap-2 mb-4">
+              <app-icon name="pencil" class="text-brand"></app-icon>
+              <h3 class="font-bold text-content-main uppercase tracking-widest text-xs">Firma Digital</h3>
+              @if (detallesFirma()) {
+                <span class="status-chip chip-success !text-[9px]">Registrada</span>
+              } @else {
+                <span class="status-chip chip-secondary !text-[9px]">No registrada</span>
+              }
+            </div>
+            @if (detallesFirma()) {
+              <div class="flex justify-center">
+                <div class="border border-divider rounded-lg p-4 bg-white max-w-md">
+                  <img [src]="detallesFirma()" alt="Firma" class="max-w-full h-auto">
+                </div>
+              </div>
+            } @else {
+              <div class="text-center py-4 text-content-muted text-sm">
+                <app-icon name="pencil-off" size="md" class="mb-2"></app-icon>
+                <p>No hay firma digital registrada</p>
+              </div>
+            }
+          </div>
+
           <!-- Información de la Guía -->
           @if (detallesGuia()) {
             <div class="card-premium p-4">
@@ -405,9 +716,13 @@ interface ReporteUnidad {
                   <p class="text-[9px] font-black text-content-faint uppercase mb-1">Tipo</p>
                   <p class="font-bold text-content-main uppercase">{{ detallesGuia().tipo }}</p>
                 </div>
-                <div>
-                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Fecha Salida</p>
-                  <p class="font-mono text-sm text-content-main">{{ detallesGuia().fecha_salida | date:'dd/MM/yyyy' }}</p>
+                <div *ngIf="detallesEmbarque().fecha_hora_salida">
+                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Fecha/Hora Salida</p>
+                  <p class="font-mono text-sm text-content-main">{{ detallesEmbarque().fecha_hora_salida | date:'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <div *ngIf="detallesEmbarque().fecha_hora_llegada">
+                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Fecha/Hora Llegada</p>
+                  <p class="font-mono text-sm text-content-main">{{ detallesEmbarque().fecha_hora_llegada | date:'dd/MM/yyyy HH:mm' }}</p>
                 </div>
                 <div>
                   <p class="text-[9px] font-black text-content-faint uppercase mb-1">Estado Guía</p>
@@ -417,44 +732,10 @@ interface ReporteUnidad {
                 </div>
               </div>
 
-              <!-- Chofer y Ayudantes -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-divider">
-                <div>
-                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Chofer</p>
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand">
-                      <app-icon name="user" size="sm"></app-icon>
-                    </div>
-                    <div>
-                      <p class="font-bold text-content-main uppercase">{{ detallesChofer()?.nombre || 'N/A' }}</p>
-                      <p class="text-[9px] text-content-faint">{{ detallesChofer()?.rol || 'Chofer' }}</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Ayudante 1</p>
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand">
-                      <app-icon name="user" size="sm"></app-icon>
-                    </div>
-                    <div>
-                      <p class="font-bold text-content-main uppercase">{{ detallesAyudante1()?.nombre || 'N/A' }}</p>
-                      <p class="text-[9px] text-content-faint">{{ detallesAyudante1()?.rol || 'Ayudante' }}</p>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <p class="text-[9px] font-black text-content-faint uppercase mb-1">Ayudante 2</p>
-                  <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand">
-                      <app-icon name="user" size="sm"></app-icon>
-                    </div>
-                    <div>
-                      <p class="font-bold text-content-main uppercase">{{ detallesAyudante2()?.nombre || 'N/A' }}</p>
-                      <p class="text-[9px] text-content-faint">{{ detallesAyudante2()?.rol || 'Ayudante' }}</p>
-                    </div>
-                  </div>
-                </div>
+              <!-- Chofer (solo nombre) -->
+              <div class="mt-4 pt-4 border-t border-divider">
+                <p class="text-[9px] font-black text-content-faint uppercase mb-1">Chofer</p>
+                <p class="font-bold text-content-main uppercase">{{ detallesChofer()?.nombre || 'N/A' }}</p>
               </div>
 
               <!-- Costos de la Guía -->
@@ -586,6 +867,142 @@ interface ReporteUnidad {
         <p-button label="Cerrar" [outlined]="true" (onClick)="mostrarDetalles = false" />
       </ng-template>
     </p-dialog>
+
+    <!-- Diálogo de Fotos -->
+    <p-dialog
+      [visible]="mostrarFotosDialog()"
+      (visibleChange)="mostrarFotosDialog.set($event)"
+      [modal]="true"
+      [style]="{ width: '90vw', maxWidth: '1000px' }"
+      [draggable]="false"
+      [resizable]="false"
+      header="Evidencia de Entrega">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        @for (foto of detallesFotos(); track foto.id) {
+          <div class="relative aspect-square rounded-lg overflow-hidden border border-divider cursor-pointer" (click)="verFoto(foto)">
+            <img [src]="foto.url" [alt]="foto.tipo" class="w-full h-full object-cover">
+            <div class="absolute bottom-0 left-0 right-0 bg-black/60 p-2">
+              <p class="text-xs text-white uppercase text-center">{{ foto.tipo }}</p>
+              @if (foto.fecha_hora_subida || foto.fecha_subida) {
+                <p class="text-[10px] text-white/70 text-center">
+                  {{ (foto.fecha_hora_subida || foto.fecha_subida) | date:'dd/MM/yyyy HH:mm:ss' }}
+                </p>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <ng-template pTemplate="footer">
+        <p-button label="Cerrar" [outlined]="true" (onClick)="mostrarFotosDialog.set(false)" />
+      </ng-template>
+    </p-dialog>
+
+    <!-- Diálogo de Checklist -->
+    <p-dialog
+      [visible]="mostrarChecklistDialog()"
+      (visibleChange)="mostrarChecklistDialog.set($event)"
+      [modal]="true"
+      [style]="{ width: '90vw', maxWidth: '800px' }"
+      [draggable]="false"
+      [resizable]="false"
+      header="Checklist de Llegada - Detalle Completo">
+      @if (detallesChecklistLlegada()) {
+        <div class="space-y-4">
+          <div class="flex items-center gap-2 mb-4">
+            <app-icon name="clipboard-check" class="text-brand"></app-icon>
+            <h3 class="font-bold text-content-main uppercase tracking-widest text-xs">Checklist de Llegada</h3>
+            @if (detallesChecklistLlegada()?.completado) {
+              <span class="status-chip chip-success !text-[9px]">Completado</span>
+            } @else {
+              <span class="status-chip chip-warn !text-[9px]">Pendiente</span>
+            }
+          </div>
+
+          @if (detallesChecklistLlegada()?.respuestas || detallesChecklistLlegada()?.items) {
+            <div class="space-y-3">
+              <!-- Formato con estructura categorizada -->
+              @if (detallesChecklistLlegada()?.estructura) {
+                @for (categoria of detallesChecklistLlegada()?.estructura; track categoria.categoria) {
+                  <div class="border border-divider rounded-lg overflow-hidden">
+                    <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                      <p class="text-[10px] font-black text-content-main uppercase tracking-wider">{{ categoria.titulo }}</p>
+                    </div>
+                    <div class="p-3">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @for (item of categoria.items; track item.id) {
+                          <div class="flex items-center justify-between p-3 rounded bg-surface-ground border border-divider">
+                            <div class="flex-1 min-w-0">
+                              <p class="text-xs text-content-faint uppercase">{{ item.descripcion }}</p>
+                              <p class="font-bold text-content-main text-sm">
+                                {{ detallesChecklistLlegada()?.respuestas?.[item.id] || '-' }}
+                              </p>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+
+              <!-- Formato plano con respuestas directas -->
+              @if (detallesChecklistLlegada()?.respuestas && !detallesChecklistLlegada()?.estructura) {
+                <div class="border border-divider rounded-lg overflow-hidden">
+                  <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                    <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                  </div>
+                  <div class="p-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      @for (respuesta of getRespuestasEntries(detallesChecklistLlegada()?.respuestas); track respuesta[0]) {
+                        <div class="p-3 rounded bg-surface-ground border border-divider">
+                          <p class="text-xs text-content-faint uppercase">{{ respuesta[0] | titlecase }}</p>
+                          <p class="font-bold text-content-main text-sm">
+                            {{ respuesta[1] || '-' }}
+                          </p>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Formato plano con items array -->
+              @if (detallesChecklistLlegada()?.items && !detallesChecklistLlegada()?.estructura) {
+                <div class="border border-divider rounded-lg overflow-hidden">
+                  <div class="bg-surface-ground px-3 py-2 border-b border-divider">
+                    <p class="text-[10px] font-black text-content-main uppercase tracking-wider">Items Verificados</p>
+                  </div>
+                  <div class="p-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      @for (item of detallesChecklistLlegada()?.items; track item.id) {
+                        <div class="p-3 rounded bg-surface-ground border border-divider flex items-center gap-3">
+                          <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+                               [class.bg-green-100]="item.completado"
+                               [class.text-green-600]="item.completado"
+                               [class.bg-red-100]="!item.completado"
+                               [class.text-red-600]="!item.completado">
+                            {{ item.completado ? '✓' : '✗' }}
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-xs text-content-faint uppercase">{{ item.nombre || item.descripcion }}</p>
+                            @if (item.observaciones) {
+                              <p class="text-xs text-content-muted">{{ item.observaciones }}</p>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      <ng-template pTemplate="footer">
+        <p-button label="Cerrar" [outlined]="true" (onClick)="mostrarChecklistDialog.set(false)" />
+      </ng-template>
+    </p-dialog>
   `
 })
 export class ReportsComponent implements OnInit {
@@ -594,11 +1011,14 @@ export class ReportsComponent implements OnInit {
   private costsService = inject(CostsService);
   private guidesService = inject(GuidesService);
   private staffService = inject(StaffService);
+  private fotosService = inject(FotosService);
+  private checklistService = inject(ChecklistService);
 
   hoy = new Date();
   fechaDesde: Date = new Date(new Date().getFullYear(), 0, 1); // Primer día del año
   fechaHasta: Date = new Date();
   filtroUnidad: string | null = null;
+  filtroBusqueda: string = '';
   unidadesOptions = signal<{label: string, value: string}[]>([]);
   mostrarImpresion = signal(false);
   loading = signal(false);
@@ -620,6 +1040,15 @@ export class ReportsComponent implements OnInit {
   detallesChofer = signal<any>(null);
   detallesAyudante1 = signal<any>(null);
   detallesAyudante2 = signal<any>(null);
+  detallesFotos = signal<Foto[]>([]);
+  detallesChecklistSalida = signal<Checklist | null>(null);
+  detallesChecklistLlegada = signal<Checklist | null>(null);
+  detallesFirma = signal<string | null>(null);
+
+  // Diálogos adicionales
+  mostrarFotosDialog = signal(false);
+  mostrarChecklistDialog = signal(false);
+  fotoSeleccionada = signal<Foto | null>(null);
 
   kpis = signal({
     ingreso: 0,
@@ -690,6 +1119,12 @@ export class ReportsComponent implements OnInit {
     this.fechaDesde = new Date(new Date().getFullYear(), 0, 1);
     this.fechaHasta = new Date();
     this.filtroUnidad = null;
+    this.filtroBusqueda = '';
+    this.generarReporte();
+  }
+
+  onBusquedaChange(valor: string) {
+    this.filtroBusqueda = valor;
     this.generarReporte();
   }
 
@@ -734,6 +1169,19 @@ export class ReportsComponent implements OnInit {
     // Filtrar por unidad
     if (this.filtroUnidad) {
       filteredShipments = filteredShipments.filter((s: any) => s.unidad_id === this.filtroUnidad);
+    }
+    
+    // Filtrar por búsqueda (folio o ruta)
+    if (this.filtroBusqueda && this.filtroBusqueda.trim()) {
+      const busqueda = this.filtroBusqueda.toLowerCase().trim();
+      filteredShipments = filteredShipments.filter((s: any) => {
+        const folioMatch = s.folio?.toLowerCase().includes(busqueda);
+        const rutaMatch = s.ruta?.toLowerCase().includes(busqueda) || 
+                         s.origen?.toLowerCase().includes(busqueda) || 
+                         s.destino_texto?.toLowerCase().includes(busqueda) ||
+                         s.destino?.toLowerCase().includes(busqueda);
+        return folioMatch || rutaMatch;
+      });
     }
     
     console.log('Embarques filtrados:', filteredShipments.length);
@@ -1007,12 +1455,16 @@ export class ReportsComponent implements OnInit {
     this.detallesChofer.set(null);
     this.detallesAyudante1.set(null);
     this.detallesAyudante2.set(null);
+    this.detallesFotos.set([]);
+    this.detallesChecklistSalida.set(null);
+    this.detallesChecklistLlegada.set(null);
+    this.detallesFirma.set(null);
 
     // Cargar datos del embarque
     this.shipmentsService.findOne(embarqueId).subscribe({
       next: (embarque) => {
         this.detallesEmbarque.set(embarque);
-        
+
         // Cargar unidad
         if (embarque.unidad_id) {
           this.fleetService.findAll().subscribe({
@@ -1029,7 +1481,7 @@ export class ReportsComponent implements OnInit {
             const guia = guias.find((g: any) => g.embarque_id === embarqueId);
             if (guia) {
               this.detallesGuia.set(guia);
-              
+
               // Cargar chofer y ayudantes usando StaffService
               this.staffService.findAll().subscribe({
                 next: (staff) => {
@@ -1038,13 +1490,13 @@ export class ReportsComponent implements OnInit {
                     const chofer = staff.find((s: any) => s.id === guia.chofer_id);
                     this.detallesChofer.set(chofer || { nombre: 'N/A', rol: 'Chofer' });
                   }
-                  
+
                   // Cargar ayudante 1
                   if (guia.ayudante1_id) {
                     const ayudante1 = staff.find((s: any) => s.id === guia.ayudante1_id);
                     this.detallesAyudante1.set(ayudante1 || { nombre: 'N/A', rol: 'Ayudante' });
                   }
-                  
+
                   // Cargar ayudante 2
                   if (guia.ayudante2_id) {
                     const ayudante2 = staff.find((s: any) => s.id === guia.ayudante2_id);
@@ -1053,6 +1505,57 @@ export class ReportsComponent implements OnInit {
                 }
               });
             }
+          }
+        });
+
+        // Cargar fotos del embarque
+        console.log('Cargando fotos para embarque:', embarqueId);
+        this.fotosService.getByEmbarque(embarqueId).subscribe({
+          next: (fotos) => {
+            console.log('Fotos cargadas:', fotos.length, fotos);
+            this.detallesFotos.set(fotos);
+            // Buscar firma en las fotos (tipo 'general')
+            console.log('Buscando firma en fotos... Tipos encontrados:', fotos.map(f => f.tipo));
+            const firmaFoto = fotos.find(f => f.tipo === 'general');
+            if (firmaFoto) {
+              console.log('Firma encontrada en fotos:', firmaFoto.url);
+              this.detallesFirma.set(firmaFoto.url);
+            } else {
+              console.log('No se encontró firma en fotos (tipo general)');
+            }
+          },
+          error: (err) => {
+            console.error('Error cargando fotos:', err);
+            this.detallesFotos.set([]);
+          }
+        });
+
+        // Cargar checklists del embarque
+        console.log('Cargando checklists para embarque:', embarqueId);
+        this.checklistService.getAllByEmbarque(embarqueId).subscribe({
+          next: (checklists) => {
+            console.log('Checklists cargados:', checklists.length, checklists);
+            const salida = checklists.find(c => c.tipo === 'salida');
+            const llegada = checklists.find(c => c.tipo === 'llegada');
+            console.log('Checklist salida:', salida);
+            console.log('Checklist llegada:', llegada);
+            this.detallesChecklistSalida.set(salida || null);
+            this.detallesChecklistLlegada.set(llegada || null);
+
+            // Extraer firma del checklist de llegada si existe
+            console.log('Buscando firma en checklist llegada...');
+            console.log('Respuestas llegada:', llegada?.respuestas);
+            if (llegada?.respuestas?.['firma']) {
+              console.log('Firma encontrada en checklist:', llegada.respuestas['firma']);
+              this.detallesFirma.set(llegada.respuestas['firma']);
+            } else {
+              console.log('No se encontró firma en checklist llegada');
+            }
+          },
+          error: (err) => {
+            console.error('Error cargando checklists:', err);
+            this.detallesChecklistSalida.set(null);
+            this.detallesChecklistLlegada.set(null);
           }
         });
 
@@ -1081,6 +1584,26 @@ export class ReportsComponent implements OnInit {
       'cancelado': 'danger'
     };
     return severityMap[estado] || 'secondary';
+  }
+
+  // Helper para convertir respuestas del checklist a array de entradas (para usar en @for)
+  getRespuestasEntries(respuestas: Record<string, any> | null | undefined): [string, any][] {
+    if (!respuestas) return [];
+    return Object.entries(respuestas);
+  }
+
+  // Métodos para diálogos
+  abrirFotosDialog() {
+    this.mostrarFotosDialog.set(true);
+  }
+
+  abrirChecklistDialog() {
+    this.mostrarChecklistDialog.set(true);
+  }
+
+  verFoto(foto: Foto) {
+    this.fotoSeleccionada.set(foto);
+    this.mostrarFotosDialog.set(true);
   }
 }
 

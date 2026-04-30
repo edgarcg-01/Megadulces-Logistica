@@ -25,6 +25,7 @@ interface Shipment {
   fecha: string;
   origen: string;
   destino: string;
+  destino_texto: string;
   unidad_placa: string;
   tipo_vehiculo?: 'camion' | 'camioneta' | 'auto';
   operador_nombre: string;
@@ -39,10 +40,12 @@ interface StatusOption {
 }
 
 interface KPI {
-  label: string;
-  value: number | string;
-  trend?: string;
-  color: 'brand' | 'orange' | 'green' | 'red';
+  total: number;
+  programados: number;
+  checklist_salida: number;
+  preguia: number;
+  transito: number;
+  completados: number;
 }
 
 @Component({
@@ -98,19 +101,19 @@ interface KPI {
           </div>
         </div>
 
-        <div class="kpi-card-trace kpi-card-trace-2 p-4">
+        <div class="kpi-card-trace kpi-card-trace-2 p-4" (mouseenter)="onKpiLeave()">
           <div class="flex flex-col items-center justify-center">
-            <app-icon name="refresh" size="lg" class="text-content-main mb-1"></app-icon>
-            <p class="text-label-xs text-content-muted text-center mb-1">En Tránsito</p>
-            <p class="text-xl font-black text-amber-500 text-center">{{ kpis().transito }}</p>
+            <app-icon name="clipboard-list" size="lg" class="text-content-main mb-1"></app-icon>
+            <p class="text-label-xs text-content-muted text-center mb-1">Checklist Salida</p>
+            <p class="text-xl font-black text-amber-500 text-center">{{ kpis().checklist_salida }}</p>
           </div>
         </div>
 
-        <div class="kpi-card-trace kpi-card-trace-3 p-4">
+        <div class="kpi-card-trace kpi-card-trace-3 p-4" (mouseenter)="onKpiLeave()">
           <div class="flex flex-col items-center justify-center">
-            <app-icon name="check-circle" size="lg" class="text-content-main mb-1"></app-icon>
-            <p class="text-label-xs text-content-muted text-center mb-1">Completados</p>
-            <p class="text-xl font-black text-green-600 text-center">{{ kpis().completados }}</p>
+            <app-icon name="package" size="lg" class="text-content-main mb-1"></app-icon>
+            <p class="text-label-xs text-content-muted text-center mb-1">Pre-Guía</p>
+            <p class="text-xl font-black text-brand text-center">{{ kpis().preguia }}</p>
           </div>
         </div>
       </div>
@@ -190,10 +193,12 @@ interface KPI {
               <td class="text-center">
                 <span class="folio-badge">{{ shipment.folio }}</span>
               </td>
-              <td class="text-center text-xs">{{ shipment.fecha | date:'dd/MM/yy' }}</td>
+              <td class="text-center text-xs">
+                {{ (shipment.fecha_hora_creacion || shipment.fecha) | date:'dd/MM/yy HH:mm' }}
+              </td>
               <td class="text-center">
                 <div class="flex flex-col items-center whitespace-nowrap">
-                  <span class="font-semibold text-sm">{{ shipment.origen }} → {{ shipment.destino }}</span>
+                  <span class="font-semibold text-sm">{{ shipment.origen }} → {{ shipment.destino_texto || shipment.destino }}</span>
                   <span class="text-[10px] text-content-faint uppercase font-bold">{{ shipment.km }} km a recorrer</span>
                 </div>
               </td>
@@ -297,7 +302,7 @@ interface KPI {
             <div class="grid grid-cols-2 gap-4 text-sm">
               <div class="text-left">
                 <span class="text-content-muted text-xs uppercase">Ruta:</span>
-                <p class="font-medium">{{ lastCreatedShipment()?.origen }} → {{ lastCreatedShipment()?.destino }}</p>
+                <p class="font-medium">{{ lastCreatedShipment()?.origen }} → {{ lastCreatedShipment()?.destino_texto || lastCreatedShipment()?.destino }}</p>
               </div>
               <div class="text-left">
                 <span class="text-content-muted text-xs uppercase">Flete:</span>
@@ -320,13 +325,6 @@ interface KPI {
               severity="secondary"
               styleClass="w-full"
               (onClick)="goToCosts()" />
-            <p-button
-              label="Solo Cerrar"
-              icon="pi pi-check"
-              [text]="true"
-              severity="secondary"
-              styleClass="w-full"
-              (onClick)="closeSuccessDialog()" />
           </div>
         </div>
       </p-dialog>
@@ -345,7 +343,10 @@ interface KPI {
             <div class="flex justify-between items-start border-b border-divider pb-4">
                 <div>
                     <h2 class="text-xl font-bold text-content-main">{{ detail.folio }}</h2>
-                    <p class="text-sm text-content-muted">{{ detail.fecha | date:'fullDate' }}</p>
+                    <p class="text-sm text-content-muted">{{ (detail.fecha_hora_creacion || detail.fecha) | date:'fullDate' }}</p>
+                    @if (detail.fecha_hora_creacion) {
+                      <p class="text-xs text-content-faint">{{ detail.fecha_hora_creacion | date:'HH:mm:ss' }}</p>
+                    }
                 </div>
                 <div class="text-right">
                     <p-tag 
@@ -365,7 +366,7 @@ interface KPI {
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-content-muted">Destino:</span>
-                            <span class="font-medium">{{ detail.destino }}</span>
+                            <span class="font-medium">{{ detail.destino_texto || detail.destino }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
                             <span class="text-content-muted">Distancia:</span>
@@ -487,9 +488,11 @@ export class ShipmentsComponent implements OnInit {
   // KPI slider timer
   private kpiTimer: any;
   
-  kpis = signal({
+  kpis = signal<KPI>({
     total: 0,
     programados: 0,
+    checklist_salida: 0,
+    preguia: 0,
     transito: 0,
     completados: 0
   });
@@ -539,13 +542,11 @@ export class ShipmentsComponent implements OnInit {
         ];
       },
       error: () => {
-        // Fallback to default statuses if API fails
+        // Fallback: solo estados relevantes para el módulo Embarques (pre-guía)
         this.statusOptions = [
           { label: 'Todos', value: null },
-          { label: 'Programados', value: SHIPMENT_STATUS.PROGRAMADO },
-          { label: 'En Tránsito', value: SHIPMENT_STATUS.EN_TRANSITO },
-          { label: 'Completados', value: SHIPMENT_STATUS.COMPLETADO },
-          { label: 'Cancelados', value: SHIPMENT_STATUS.CANCELADO }
+          { label: 'Programados', value: 'programado' },
+          { label: 'Checklist Salida', value: 'checklist_salida' }
         ];
       }
     });
@@ -557,11 +558,18 @@ export class ShipmentsComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: (data) => {
-        this.shipments.set(data);
-        this.calculateKPIs(data);
+        console.log('Datos de shipments recibidos:', data);
+        // Módulo Embarques: solo mostrar embarques previos a la guía
+        // Estados: programado, checklist_salida
+        const estadosPermitidos = ['programado', 'checklist_salida'];
+        const embarquesFiltrados = data.filter((s: Shipment) => estadosPermitidos.includes(s.estado));
+        console.log('Embarques filtrados (pre-guía):', embarquesFiltrados);
+        this.shipments.set(embarquesFiltrados);
+        this.calculateKPIs(embarquesFiltrados);
         this.loading.set(false);
       },
       error: (err) => {
+        console.error('Error al cargar shipments:', err);
         this.loading.set(false);
       }
     });
@@ -573,31 +581,55 @@ export class ShipmentsComponent implements OnInit {
       const shipmentDate = new Date(s.fecha).toISOString().split('T')[0];
       return shipmentDate === today;
     });
-    
+
+    // Módulo Embarques: solo contar estados pre-guía
+    // programado, checklist_salida
+    const preGuia = data.filter(s =>
+      ['programado', 'checklist_salida'].includes(s.estado)
+    ).length;
+
     this.kpis.set({
       total: todayShipments.length,
       programados: data.filter(s => s.estado === 'programado').length,
-      transito: data.filter(s => s.estado === 'transito').length,
-      completados: data.filter(s => s.estado === 'completado').length
+      checklist_salida: data.filter(s => s.estado === 'checklist_salida').length,
+      preguia: preGuia,
+      transito: 0, // No aplica en este módulo
+      completados: 0 // No aplica en este módulo
     });
   }
 
   getStatusSeverity(status: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
     const map: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
-      [SHIPMENT_STATUS.PROGRAMADO]: 'info',
-      [SHIPMENT_STATUS.EN_TRANSITO]: 'warn',
-      [SHIPMENT_STATUS.COMPLETADO]: 'success',
-      [SHIPMENT_STATUS.CANCELADO]: 'danger'
+      'programado': 'info',
+      'checklist_salida': 'warn',
+      'en_transito': 'warn',
+      'fotos_entrega': 'info',
+      'checklist_llegada': 'info',
+      'costos_pendientes': 'secondary',
+      'completado': 'success',
+      'cancelado': 'danger',
+      // Legacy/alias mappings
+      'transito': 'warn',
+      'en tránsito': 'warn',
+      'entregado': 'success'
     };
     return map[status] || 'secondary';
   }
 
   getStatusLabel(status: string): string {
     const map: Record<string, string> = {
-      [SHIPMENT_STATUS.PROGRAMADO]: 'Programado',
-      [SHIPMENT_STATUS.EN_TRANSITO]: 'En Tránsito',
-      [SHIPMENT_STATUS.COMPLETADO]: 'Completado',
-      [SHIPMENT_STATUS.CANCELADO]: 'Cancelado'
+      'programado': 'Programado',
+      'checklist_salida': 'Checklist Salida',
+      'en_transito': 'En Tránsito',
+      'fotos_entrega': 'Fotos Entrega',
+      'checklist_llegada': 'Checklist Llegada',
+      'costos_pendientes': 'Costos Pendientes',
+      'completado': 'Completado',
+      'cancelado': 'Cancelado',
+      // Legacy/alias mappings
+      'transito': 'En Tránsito',
+      'en tránsito': 'En Tránsito',
+      'entregado': 'Completado'
     };
     return map[status] || status;
   }
@@ -606,13 +638,19 @@ export class ShipmentsComponent implements OnInit {
     // Normalizar estado para asegurar consistencia
     const statusLower = status.toLowerCase().replace(/ /g, '_');
     const statusMap: Record<string, string> = {
-      'programado': SHIPMENT_STATUS.PROGRAMADO,
+      // Nuevos estados del flujo completo
+      'programado': 'programado',
+      'checklist_salida': 'checklist_salida',
+      'en_transito': 'en_transito',
+      'fotos_entrega': 'fotos_entrega',
+      'checklist_llegada': 'checklist_llegada',
+      'costos_pendientes': 'costos_pendientes',
+      'completado': 'completado',
+      'cancelado': 'cancelado',
+      // Legacy mappings
       'transito': SHIPMENT_STATUS.EN_TRANSITO,
-      'en_transito': SHIPMENT_STATUS.EN_TRANSITO,
       'en tránsito': SHIPMENT_STATUS.EN_TRANSITO,
-      'completado': SHIPMENT_STATUS.COMPLETADO,
-      'entregado': SHIPMENT_STATUS.COMPLETADO,
-      'cancelado': SHIPMENT_STATUS.CANCELADO
+      'entregado': SHIPMENT_STATUS.COMPLETADO
     };
     return statusMap[statusLower] || status;
   }

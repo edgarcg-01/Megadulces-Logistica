@@ -28,7 +28,9 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const hasRole = requiredRoles.some((role) => user.role_name === role);
+    // Verificar rol principal y roles secundarios
+    const allUserRoles = [user.role_name, ...(user.roles || [])];
+    const hasRole = requiredRoles.some((role) => allUserRoles.includes(role));
     if (!hasRole) {
       throw new ForbiddenException('No tienes los roles necesarios.');
     }

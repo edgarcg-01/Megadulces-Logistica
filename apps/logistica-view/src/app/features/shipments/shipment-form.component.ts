@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal, output, DestroyRef, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -230,6 +231,45 @@ export class ShipmentFormComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadCatalogs();
+
+    // Función para calcular km
+    const calcularKm = () => {
+      const destinoId = this.shipmentForm.get('destino_id')?.value;
+      const origen = this.shipmentForm.get('origen')?.value;
+
+      if (!destinoId || !origen) {
+        this.shipmentForm.patchValue({ km: 0 }, { emitEvent: false });
+        return;
+      }
+
+      const destino = this.destinations().find((d: Destination) => d.id === destinoId);
+
+      if (!destino) {
+        this.shipmentForm.patchValue({ km: 0 }, { emitEvent: false });
+        return;
+      }
+
+      // Si origen es igual al destino, km = 0
+      // Si no, km = distancia del destino * 2 (ida y vuelta)
+      let km = 0;
+      if (origen && origen === destino.nombre) {
+        km = 0;
+      } else if (destino.km) {
+        km = destino.km * 2; // Ida y vuelta
+      }
+
+      this.shipmentForm.patchValue({ km }, { emitEvent: false });
+    };
+
+    // Calcular km automáticamente cuando cambia el destino
+    this.shipmentForm.get('destino_id')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => calcularKm());
+
+    // Calcular km automáticamente cuando cambia el origen
+    this.shipmentForm.get('origen')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => calcularKm());
   }
 
   ngAfterViewInit(): void {

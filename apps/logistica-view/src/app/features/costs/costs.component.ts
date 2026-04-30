@@ -150,9 +150,54 @@ export interface CostRecord {
           <app-cost-form
             [costToEdit]="selectedCostForEdit()"
             [prefillFromShipment]="prefillFromShipment()"
-            (saved)="onCostSaved()"
+            (saved)="onCostSaved($event)"
             (canceled)="onFormCanceled()" />
         }
+      </p-dialog>
+
+      <!-- Cost Success Dialog -->
+      <p-dialog
+        [(visible)]="showSuccessDialog"
+        [modal]="true"
+        [style]="{width: '500px'}"
+        [breakpoints]="{'960px': '90vw'}"
+        [draggable]="false"
+        [resizable]="false"
+        [closable]="false"
+        [showHeader]="false"
+        styleClass="success-dialog">
+        <div class="p-6 text-center">
+          <!-- Success Icon -->
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <app-icon name="check-circle" size="xl" class="text-green-600"></app-icon>
+          </div>
+
+          <h2 class="text-xl font-bold text-content-main mb-2">¡Costos Registrados!</h2>
+          <p class="text-sm text-content-muted mb-4">
+            Los costos del embarque <strong>{{ lastSavedCost()?.embarque_folio }}</strong> han sido registrados exitosamente.
+          </p>
+
+          <div class="mb-6 p-4 bg-surface-ground rounded-lg border border-divider">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div class="text-left">
+                <span class="text-content-muted text-xs uppercase">Total:</span>
+                <p class="font-medium text-green-600">{{ lastSavedCost()?.total | currency:'MXN' }}</p>
+              </div>
+              <div class="text-left">
+                <span class="text-content-muted text-xs uppercase">Fecha:</span>
+                <p class="font-medium">{{ lastSavedCost()?.fecha | date:'dd/MM/yyyy' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3">
+            <p-button
+              label="Cerrar"
+              icon="pi pi-check"
+              styleClass="p-button-brand w-full"
+              (onClick)="closeSuccessDialog()" />
+          </div>
+        </div>
       </p-dialog>
     </div>
   `
@@ -166,6 +211,8 @@ export class CostsComponent implements OnInit {
   selectedCostForEdit = signal<CostRecord | null>(null);
   prefillFromShipment = signal<any>(null);
   searchTerm = signal('');
+  showSuccessDialog = signal(false);
+  lastSavedCost = signal<CostRecord | null>(null);
 
   totalAcumulado = signal<number>(0);
 
@@ -236,11 +283,20 @@ export class CostsComponent implements OnInit {
     this.showForm.set(true);
   }
 
-  onCostSaved() {
+  onCostSaved(cost?: CostRecord) {
+    if (cost) {
+      this.lastSavedCost.set(cost);
+      this.showSuccessDialog.set(true);
+    }
     this.showForm.set(false);
     this.selectedCostForEdit.set(null);
     this.prefillFromShipment.set(null);
     this.loadCosts();
+  }
+
+  closeSuccessDialog() {
+    this.showSuccessDialog.set(false);
+    this.lastSavedCost.set(null);
   }
 
   onFormCanceled() {

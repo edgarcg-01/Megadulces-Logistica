@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { AvatarModule } from 'primeng/avatar';
 import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
+import { MenuItem } from 'primeng/api';
 import { AuthService } from '../../services/auth.service';
 import { IosPrimeSegmentedComponent } from '../../../shared/components/ui/ios-prime-segmented.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
@@ -18,30 +20,33 @@ interface NavItem {
 @Component({
   selector: 'app-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, ButtonModule, AvatarModule, TooltipModule, IosPrimeSegmentedComponent, IconComponent],
+  imports: [CommonModule, RouterModule, ButtonModule, AvatarModule, TooltipModule, MenuModule, IosPrimeSegmentedComponent, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="sticky top-0 z-50 px-4 py-3">
-      <div class="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-4 rounded-2xl border border-divider bg-surface-card/90 px-4 py-2.5 backdrop-blur-xl">
-        <div class="flex shrink-0 items-center gap-3">
+    <header class="sticky top-0 z-50 px-3 sm:px-4 py-2 sm:py-3">
+      <div class="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-2 sm:gap-4 rounded-2xl border border-divider bg-surface-card/90 px-2 sm:px-4 py-2 sm:py-2.5 backdrop-blur-xl">
+        <!-- Logo -->
+        <div class="flex shrink-0 items-center gap-2 sm:gap-3">
           <img 
             src="/mega-dulces-logo.webp" 
             alt="MegaDulces Logo" 
-            class="h-9 w-auto object-contain" />
-          <div class="flex flex-col">
+            class="h-7 sm:h-9 w-auto object-contain" />
+          <div class="hidden sm:flex flex-col">
             <span class="text-sm font-semibold leading-none tracking-tight text-content-main">MegaDulces</span>
             <span class="text-[10px] uppercase tracking-[0.22em] text-content-muted">Logistica</span>
           </div>
         </div>
 
-        <nav class="flex items-center">
+        <!-- Navegación - Oculta para choferes -->
+        <nav class="hidden lg:flex items-center" *ngIf="!isDriver()">
           <app-ios-prime-segmented 
             [options]="navOptions()"
             [(selectedValue)]="currentPath"
             (selectedValueChange)="onNavChange($event)" />
         </nav>
 
-        <div class="flex shrink-0 items-center gap-1.5">
+        <!-- Acciones -->
+        <div class="flex shrink-0 items-center gap-1 sm:gap-1.5">
           <!-- Modos -->
           <div class="flex items-center gap-1 px-1.5 py-1 rounded-full border border-divider bg-surface-ground/50">
             <p-button 
@@ -59,20 +64,38 @@ interface NavItem {
             </p-button>
           </div>
 
-          <div class="h-6 w-px bg-divider mx-1"></div>
+          <div class="hidden sm:block h-6 w-px bg-divider mx-1"></div>
 
-          <!-- Perfil y Logout -->
-          <div class="flex items-center gap-2 rounded-full border border-divider bg-surface-ground px-3 py-1.5 mr-1">
+          <!-- Perfil - Responsive -->
+          <div class="flex items-center gap-1 sm:gap-2 rounded-full border border-divider bg-surface-ground px-2 sm:px-3 py-1 sm:py-1.5 mr-0 sm:mr-1">
             <div class="relative">
               <p-avatar 
                 icon="pi pi-user" 
                 shape="circle" 
-                [style]="{width: '24px', height: '24px', 'font-size': '0.7rem'}"
-                styleClass="bg-surface-ground text-content-main" />
-              <span class="animate-subtle-pulse absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-surface-card bg-content-main"></span>
+                [style]="{width: '20px', height: '20px', 'font-size': '0.6rem'}"
+                styleClass="bg-surface-ground text-content-main sm:w-6 sm:h-6 sm:text-[0.7rem]" />
+              <span class="animate-subtle-pulse absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full border border-surface-card bg-content-main"></span>
             </div>
-            <span class="text-xs font-bold text-content-main tracking-tight">{{ username()?.username }}</span>
+            <span class="hidden sm:block text-xs font-bold text-content-main tracking-tight truncate max-w-[100px]">{{ username()?.username }}</span>
           </div>
+
+          <!-- Configuración -->
+          <p-button 
+            icon="pi pi-cog" 
+            severity="secondary" 
+            rounded
+            text 
+            size="small"
+            (onClick)="configMenu.toggle($event)"
+            styleClass="w-8 h-8"
+            pTooltip="Configuración"
+            tooltipPosition="bottom" />
+          <p-menu 
+            #configMenu 
+            [model]="configMenuItems" 
+            [popup]="true" 
+            appendTo="body"
+            styleClass="text-xs" />
           
           <p-button 
             icon="pi pi-sign-out" 
@@ -119,6 +142,42 @@ export class TopbarComponent {
   currentPath = signal('');
 
   username = this.authService.user;
+
+  configMenuItems: MenuItem[] = [
+    {
+      label: 'Mi Perfil',
+      icon: 'pi pi-user-edit',
+      command: () => this.router.navigate(['/profile'])
+    },
+    {
+      label: 'Cambiar Contraseña',
+      icon: 'pi pi-lock',
+      command: () => this.router.navigate(['/profile/password'])
+    },
+    {
+      separator: true
+    },
+    {
+      label: 'Gestión de Usuarios',
+      icon: 'pi pi-users',
+      visible: this.isAdmin(),
+      command: () => this.router.navigate(['/admin/users'])
+    },
+    {
+      label: 'Configuración del Sistema',
+      icon: 'pi pi-cog',
+      visible: this.isAdmin(),
+      command: () => this.router.navigate(['/admin/settings'])
+    }
+  ];
+
+  isDriver(): boolean {
+    return this.authService.hasRole('chofer') || this.authService.hasRole('driver') || this.authService.hasRole('operador');
+  }
+
+  isAdmin(): boolean {
+    return this.authService.hasRole('admin') || this.authService.hasRole('administrador') || this.authService.hasRole('superadmin');
+  }
 
   constructor() {
     this.router.events.pipe(

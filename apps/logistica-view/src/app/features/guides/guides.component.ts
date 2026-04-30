@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -18,7 +19,7 @@ import { GuidesService } from '../../core/services/logistics.service';
 
 interface Guide {
   id: string;
-  numero: string;
+  folio: string;
   embarque_id: string;
   embarque_folio?: string;
   chofer_id: string;
@@ -184,7 +185,7 @@ interface StatusOption {
           <ng-template #body let-guide>
             <tr class="hover-lift">
               <td class="text-center">
-                <span class="folio-badge">{{ guide.numero }}</span>
+                <span class="folio-badge">{{ guide.folio }}</span>
               </td>
               <td class="text-center text-xs text-content-muted">
                 {{ guide.fecha_salida | date:'dd/MM/yyyy' }}
@@ -254,6 +255,59 @@ interface StatusOption {
         </p-table>
       </div>
 
+      <!-- Guide Success Dialog -->
+      <p-dialog
+        [(visible)]="showSuccessDialog"
+        [modal]="true"
+        [style]="{width: '500px'}"
+        [breakpoints]="{'960px': '90vw'}"
+        [draggable]="false"
+        [resizable]="false"
+        [closable]="false"
+        [showHeader]="false"
+        styleClass="success-dialog">
+        <div class="p-6 text-center">
+          <!-- Success Icon -->
+          <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <app-icon name="check-circle" size="xl" class="text-green-600"></app-icon>
+          </div>
+
+          <h2 class="text-xl font-bold text-content-main mb-2">¡Guía Registrada!</h2>
+          <p class="text-sm text-content-muted mb-4">
+            La guía <strong>{{ lastSavedGuide()?.folio }}</strong> ha sido creada exitosamente.
+          </p>
+
+          <div class="mb-6 p-4 bg-surface-ground rounded-lg border border-divider">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div class="text-left">
+                <span class="text-content-muted text-xs uppercase">Chofer:</span>
+                <p class="font-medium">{{ lastSavedGuide()?.chofer_nombre }}</p>
+              </div>
+              <div class="text-left">
+                <span class="text-content-muted text-xs uppercase">Viáticos:</span>
+                <p class="font-medium text-green-600">{{ lastSavedGuide()?.viaticos | currency:'MXN' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-sm font-medium text-content-main mb-4">¿Qué deseas hacer ahora?</p>
+
+          <div class="flex flex-col gap-3">
+            <p-button
+              label="Registrar Costos (Cierre)"
+              icon="pi pi-calculator"
+              styleClass="p-button-brand w-full"
+              (onClick)="goToCosts()" />
+            <p-button
+              label="Cerrar"
+              icon="pi pi-check"
+              severity="secondary"
+              styleClass="w-full"
+              (onClick)="closeSuccessDialog()" />
+          </div>
+        </div>
+      </p-dialog>
+
       <!-- New Guide Dialog -->
       <p-dialog 
         [visible]="showForm()"
@@ -272,7 +326,7 @@ interface StatusOption {
         <app-guide-form
           [guideToEdit]="selectedGuide()"
           [prefillFromShipment]="prefillFromShipment()"
-          (saved)="onGuideSaved()"
+          (saved)="onGuideSaved($event)"
           (canceled)="onFormCanceled()" />
       </p-dialog>
 
@@ -291,7 +345,7 @@ interface StatusOption {
             <div class="grid grid-cols-2 gap-4 pb-4 border-b border-divider">
               <div>
                 <span class="text-label-xs text-content-faint block uppercase">Número de Guía</span>
-                <span class="text-lg font-black text-content-main">{{ guide.numero }}</span>
+                <span class="text-lg font-black text-content-main">{{ guide.folio }}</span>
               </div>
               <div class="text-right">
                 <span class="text-label-xs text-content-faint block uppercase">Estado</span>
@@ -378,6 +432,7 @@ interface StatusOption {
 export class GuidesComponent implements OnInit {
   private guidesService = inject(GuidesService);
   private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
 
   guides = signal<Guide[]>([]);
   loading = signal(true);
@@ -385,6 +440,8 @@ export class GuidesComponent implements OnInit {
   selectedGuide = signal<Guide | null>(null);
   selectedGuideForView = signal<Guide | null>(null);
   prefillFromShipment = signal<any>(null);
+  showSuccessDialog = signal(false);
+  lastSavedGuide = signal<Guide | null>(null);
   hoveredKpi = signal(-1);
   kpiVisible = signal(false);
   private kpiTimer: any;
@@ -473,8 +530,8 @@ export class GuidesComponent implements OnInit {
   filteredGuides() {
     if (!this.searchTerm) return this.guides();
     const term = this.searchTerm.toLowerCase();
-    return this.guides().filter(g => 
-      g.numero?.toLowerCase().includes(term) ||
+    return this.guides().filter(g =>
+      g.folio?.toLowerCase().includes(term) ||
       g.chofer_nombre?.toLowerCase().includes(term)
     );
   }
@@ -493,7 +550,11 @@ export class GuidesComponent implements OnInit {
     this.selectedGuideForView.set(guide);
   }
 
-  onGuideSaved() {
+  onGuideSaved(guide?: Guide) {
+    if (guide) {
+      this.lastSavedGuide.set(guide);
+      this.showSuccessDialog.set(true);
+    }
     this.showForm.set(false);
     this.selectedGuide.set(null);
     this.prefillFromShipment.set(null);
@@ -507,6 +568,25 @@ export class GuidesComponent implements OnInit {
   }
 
   // KPI slider methods
+  closeSuccessDialog() {
+    this.showSuccessDialog.set(false);
+    this.lastSavedGuide.set(null);
+  }
+
+  goToCosts() {
+    const guide = this.lastSavedGuide();
+    if (guide && guide.embarque_id) {
+      sessionStorage.setItem('prefill_cost_from_guide', JSON.stringify({
+        embarque_id: guide.embarque_id,
+        embarque_folio: guide.embarque_folio
+      }));
+      this.showSuccessDialog.set(false);
+      this.router.navigate(['/costs']);
+    } else {
+      this.closeSuccessDialog();
+    }
+  }
+
   onKpiEnter(index: number) {
     clearTimeout(this.kpiTimer);
     this.kpiVisible.set(false);

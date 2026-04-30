@@ -19,13 +19,23 @@ export interface ChecklistCategoria {
   items: ChecklistItemDefinition[];
 }
 
+export interface ChecklistItem {
+  id: string;
+  nombre?: string;
+  descripcion?: string;
+  completado: boolean;
+  observaciones?: string;
+  respuesta?: any;
+}
+
 export interface Checklist {
   id: string;
   embarque_id: string;
   chofer_id: string;
   tipo: ChecklistTipo;
   respuestas: Record<string, any>;
-  estructura: ChecklistCategoria[];
+  estructura?: ChecklistCategoria[];
+  items?: ChecklistItem[]; // Formato alternativo del backend
   fotos_danos?: string[];
   completado: boolean;
   completado_at?: string;
@@ -91,6 +101,10 @@ export class ChecklistService {
     
     console.log('validateCompleteness - respuestas:', checklist.respuestas);
     
+    if (!checklist.estructura) {
+      return { valid: false, missing: ['estructura'] };
+    }
+    
     for (const categoria of checklist.estructura) {
       for (const item of categoria.items) {
         if (item.requerido) {
@@ -106,11 +120,16 @@ export class ChecklistService {
               isMissing = true;
             }
           }
-          // Para items de tipo 'si_no', validar que sea booleano true
+          // Para items de tipo 'si_no', validar que sea booleano (true o false)
           else if (item.tipo === 'si_no') {
-            if (respuesta !== true) {
+            if (typeof respuesta !== 'boolean') {
               isMissing = true;
             }
+          }
+          // Para items de tipo 'texto_largo', permitir string vacío (campos opcionales como "si hubo", "si existen")
+          else if (item.tipo === 'texto_largo') {
+            // No validar - campo opcional
+            isMissing = false;
           }
           // Para otros tipos, validar que no esté vacío
           else {
@@ -125,14 +144,9 @@ export class ChecklistService {
           if (isMissing) {
             missing.push(`${categoria.titulo}: ${item.descripcion}`);
           }
-          
-          // Para items con foto requerida cuando está 'malo'
-          if (item.requiere_foto && item.tipo === 'estado' && respuesta === 'malo') {
-            const tieneFoto = checklist.fotos_danos && checklist.fotos_danos.length > 0;
-            if (!tieneFoto) {
-              missing.push(`${categoria.titulo}: ${item.descripcion} (foto de daño requerida)`);
-            }
-          }
+
+          // Nota: La foto ya no es requerida para completar el checklist
+          // El chofer puede subir fotos opcionalmente después
         }
       }
     }

@@ -43,6 +43,13 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
           </div>
         }
 
+        @if (shipments().length === 0 && !costToEdit()) {
+          <div class="mb-4 rounded-lg border border-amber-400/40 bg-amber-100/40 px-4 py-3 text-sm text-content-main">
+            <app-icon name="information-circle" size="sm" class="mr-2"></app-icon>
+            <strong>No hay embarques disponibles.</strong> El chofer debe completar la ruta (checklist de llegada) antes de registrar costos.
+          </div>
+        }
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- DATOS GENERALES -->
           <div class="space-y-4">
@@ -193,7 +200,7 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
 export class CostFormComponent implements OnInit {
   costToEdit = input<any>(null);
   prefillFromShipment = input<any>(null);
-  saved = output<void>();
+  saved = output<any>();
   canceled = output<void>();
 
   private fb = inject(FormBuilder);
@@ -278,20 +285,30 @@ export class CostFormComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Estados permitidos para registrar costos (chofer debe haber completado la ruta)
+    const estadosPermitidos = ['checklist_llegada', 'costos_pendientes', 'completado'];
+
     this.shipmentsService.findAll().subscribe(data => {
       // Cargar costos existentes para filtrar embarques sin costos
       this.costsService.findAll().subscribe(costs => {
         const embarqueIdsConCostos = new Set(costs.map((c: any) => c.embarque_id));
-        
-        // Filtrar solo embarques sin costos registrados
-        const embarquesSinCostos = data.filter((s: any) => !embarqueIdsConCostos.has(s.id));
-        this.shipments.set(embarquesSinCostos);
-        
+
+        // Filtrar embarques que:
+        // 1. No tengan costos registrados
+        // 2. Estén en estados permitidos (chofer completó la ruta)
+        const embarquesValidos = data.filter((s: any) => {
+          const sinCostos = !embarqueIdsConCostos.has(s.id);
+          const estadoValido = estadosPermitidos.includes(s.estado);
+          return sinCostos && estadoValido;
+        });
+
+        this.shipments.set(embarquesValidos);
+
         // After shipments load, check if we need to prefill from a shipment
         const shipment = this.prefillFromShipment();
         if (shipment && shipment.embarque_id) {
           // Find the shipment in the loaded data
-          const found = embarquesSinCostos.find((s: any) => s.id === shipment.embarque_id);
+          const found = embarquesValidos.find((s: any) => s.id === shipment.embarque_id);
           if (found) {
             // Trigger the value change to load shipment data
             setTimeout(() => {
@@ -367,9 +384,9 @@ export class CostFormComponent implements OnInit {
       : this.costsService.create(data);
 
     request.subscribe({
-      next: () => {
+      next: (savedCost) => {
         this.saving.set(false);
-        this.saved.emit();
+        this.saved.emit(savedCost);
       },
       error: (err) => {
         this.saving.set(false);

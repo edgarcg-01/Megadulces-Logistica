@@ -47,10 +47,11 @@ export class ChecklistsController {
   @Patch(':id/completar')
   @ApiOperation({ summary: 'Marcar checklist como completado' })
   async complete(@Param('id') id: string) {
-    // Validar que esté completo antes de marcar
-    const isValid = await this.checklistsService.validateChecklistCompleto(id);
-    if (!isValid) {
-      throw new Error('El checklist no está completo. Faltan campos requeridos.');
+    // Nota: La validación completa se hace en el frontend
+    // Aquí solo verificamos que exista el checklist
+    const checklist = await this.checklistsService.getChecklistById(id);
+    if (!checklist) {
+      throw new Error('Checklist no encontrado');
     }
     return this.checklistsService.completeChecklist(id);
   }

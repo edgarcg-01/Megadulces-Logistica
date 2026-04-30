@@ -34,6 +34,7 @@ export class FotosService {
     );
 
     // Guardar en base de datos
+    const now = new Date();
     const [foto] = await this.knex('logistica_fotos_entrega')
       .insert({
         embarque_id: embarqueId,
@@ -43,13 +44,14 @@ export class FotosService {
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id,
         metadata: metadata ? JSON.stringify(metadata) : null,
-        fecha_subida: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
+        fecha_subida: now,
+        fecha_hora_subida: now, // Fecha y hora completas
+        created_at: now,
+        updated_at: now,
       })
       .returning('*');
 
-    return foto;
+    return { ...foto, fecha_hora_subida: now };
   }
 
   async subirFotoBase64(
@@ -67,6 +69,7 @@ export class FotosService {
     );
 
     // Guardar en base de datos
+    const now = new Date();
     const [foto] = await this.knex('logistica_fotos_entrega')
       .insert({
         embarque_id: embarqueId,
@@ -76,56 +79,134 @@ export class FotosService {
         url: uploadResult.secure_url,
         public_id: uploadResult.public_id,
         metadata: metadata ? JSON.stringify(metadata) : null,
-        fecha_subida: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
+        fecha_subida: now,
+        fecha_hora_subida: now, // Fecha y hora completas
+        created_at: now,
+        updated_at: now,
       })
       .returning('*');
 
-    return foto;
+    return { ...foto, fecha_hora_subida: now };
   }
 
   async getFotosByEmbarque(embarqueId: string) {
-    const fotos = await this.knex('logistica_fotos_entrega')
-      .where('embarque_id', embarqueId)
-      .orderBy('fecha_subida', 'asc');
+    try {
+      console.log('Service: getFotosByEmbarque llamado con embarqueId:', embarqueId);
 
-    return fotos.map(f => ({
-      ...f,
-      metadata: f.metadata ? JSON.parse(f.metadata) : null,
-    }));
+      // Verificar que la tabla existe y tiene las columnas necesarias
+      const tableExists = await this.knex.schema.hasTable('logistica_fotos_entrega');
+      if (!tableExists) {
+        console.warn('Tabla logistica_fotos_entrega no existe');
+        return [];
+      }
+
+      const hasTipo = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'tipo');
+      const hasMetadata = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'metadata');
+
+      console.log('Service: Columnas - tipo:', hasTipo, 'metadata:', hasMetadata);
+
+      let query = this.knex('logistica_fotos_entrega')
+        .where('embarque_id', embarqueId);
+
+      console.log('Service: Query SQL:', query.toSQL());
+
+      // Solo ordenar si la columna existe
+      const hasFechaSubida = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'fecha_subida');
+      if (hasFechaSubida) {
+        query = query.orderBy('fecha_subida', 'asc');
+      } else {
+        query = query.orderBy('created_at', 'asc');
+      }
+
+      const fotos = await query;
+
+      console.log('Service: Fotos encontradas:', fotos.length, fotos);
+
+      return fotos.map(f => ({
+        ...f,
+        tipo: hasTipo ? f.tipo : 'general',
+        // Knex ya parsea JSONB automáticamente, no necesitamos JSON.parse
+        metadata: hasMetadata ? f.metadata : null,
+      }));
+    } catch (error: any) {
+      console.error('Error en getFotosByEmbarque:', error);
+      // En lugar de lanzar error, devolver array vacío
+      return [];
+    }
   }
 
   async getFotosByEmbarqueAndTipo(embarqueId: string, tipo: FotoTipo) {
-    const fotos = await this.knex('logistica_fotos_entrega')
-      .where({ embarque_id: embarqueId, tipo })
-      .orderBy('fecha_subida', 'asc');
+    try {
+      const tableExists = await this.knex.schema.hasTable('logistica_fotos_entrega');
+      if (!tableExists) {
+        return [];
+      }
 
-    return fotos.map(f => ({
-      ...f,
-      metadata: f.metadata ? JSON.parse(f.metadata) : null,
-    }));
+      const hasTipo = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'tipo');
+      const hasMetadata = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'metadata');
+
+      let query = this.knex('logistica_fotos_entrega')
+        .where('embarque_id', embarqueId);
+
+      if (hasTipo) {
+        query = query.where('tipo', tipo);
+      }
+
+      const hasFechaSubida = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'fecha_subida');
+      if (hasFechaSubida) {
+        query = query.orderBy('fecha_subida', 'asc');
+      } else {
+        query = query.orderBy('created_at', 'asc');
+      }
+
+      const fotos = await query;
+
+      return fotos.map(f => ({
+        ...f,
+        tipo: hasTipo ? f.tipo : 'general',
+        // Knex ya parsea JSONB automáticamente, no necesitamos JSON.parse
+        metadata: hasMetadata ? f.metadata : null,
+      }));
+    } catch (error: any) {
+      console.error('Error en getFotosByEmbarqueAndTipo:', error);
+      return [];
+    }
   }
 
   async validarFotosRequeridas(embarqueId: string): Promise<{ valid: boolean; missing: FotoTipo[] }> {
-    const requiredTypes: FotoTipo[] = ['entrega_firmada', 'ine_receptor'];
-    const missing: FotoTipo[] = [];
-
-    for (const tipo of requiredTypes) {
-      const count = await this.knex('logistica_fotos_entrega')
-        .where({ embarque_id: embarqueId, tipo })
-        .count('id as count')
-        .first();
-
-      if (Number(count?.count || 0) === 0) {
-        missing.push(tipo);
+    try {
+      const tableExists = await this.knex.schema.hasTable('logistica_fotos_entrega');
+      if (!tableExists) {
+        return { valid: false, missing: ['entrega_firmada', 'ine_receptor'] };
       }
-    }
 
-    return {
-      valid: missing.length === 0,
-      missing,
-    };
+      const hasTipo = await this.knex.schema.hasColumn('logistica_fotos_entrega', 'tipo');
+      const requiredTypes: FotoTipo[] = ['entrega_firmada', 'ine_receptor'];
+      const missing: FotoTipo[] = [];
+
+      for (const tipo of requiredTypes) {
+        let query = this.knex('logistica_fotos_entrega')
+          .where('embarque_id', embarqueId);
+
+        if (hasTipo) {
+          query = query.where('tipo', tipo);
+        }
+
+        const count = await query.count('id as count').first();
+
+        if (Number(count?.count || 0) === 0) {
+          missing.push(tipo);
+        }
+      }
+
+      return {
+        valid: missing.length === 0,
+        missing,
+      };
+    } catch (error: any) {
+      console.error('Error en validarFotosRequeridas:', error);
+      return { valid: false, missing: ['entrega_firmada', 'ine_receptor'] };
+    }
   }
 
   async deleteFoto(fotoId: string) {

@@ -4,6 +4,7 @@ export interface User {
   nombre_completo?: string;
   email?: string;
   role_name: string;
+  roles?: string[]; // Roles secundarios
   permissions?: Record<string, boolean>;
   activo: boolean;
 }
