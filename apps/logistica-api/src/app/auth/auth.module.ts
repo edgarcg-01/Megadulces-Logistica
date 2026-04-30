@@ -9,7 +9,7 @@ import { AuthController } from './auth.controller';
     PassportModule,
     JwtModule.registerAsync({
       useFactory: () => ({
-        secret: process.env.JWT_SECRET || (() => { throw new Error('JWT_SECRET no definido en variables de entorno'); })(),
+        secret: process.env.JWT_SECRET || 'super_secret_dev_key_change_in_prod',
         signOptions: { expiresIn: '24h' },
       }),
       global: true,
