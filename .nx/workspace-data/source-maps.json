@@ -502,6 +502,10 @@
       "apps/logistica-view/project.json",
       "nx/core/project-json"
     ],
+    "targets.build.configurations.production.fileReplacements": [
+      "apps/logistica-view/project.json",
+      "nx/core/project-json"
+    ],
     "targets.build.configurations.production.budgets": [
       "apps/logistica-view/project.json",
       "nx/core/project-json"

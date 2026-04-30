@@ -58,6 +58,12 @@
             },
             "configurations": {
               "production": {
+                "fileReplacements": [
+                  {
+                    "replace": "apps/logistica-view/src/environments/environment.ts",
+                    "with": "apps/logistica-view/src/environments/environment.production.ts"
+                  }
+                ],
                 "budgets": [
                   {
                     "type": "initial",
@@ -52463,5 +52469,5 @@
   },
   "version": "6.0",
   "errors": [],
-  "computedAt": 1777575668938
+  "computedAt": 1777578262825
 }
