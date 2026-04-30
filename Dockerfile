@@ -4,7 +4,7 @@
 FROM node:20.12.2-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+RUN --mount=type=cache,id=railway-npm-cache,target=/root/.npm \
     npm ci
 
 
@@ -21,7 +21,7 @@ ENV NX_DAEMON=false \
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN --mount=type=cache,id=nx-cache,target=/app/.nx/cache \
+RUN --mount=type=cache,id=railway-nx-cache,target=/app/.nx/cache \
     npm run build
 
 
@@ -31,7 +31,7 @@ RUN --mount=type=cache,id=nx-cache,target=/app/.nx/cache \
 FROM node:20.12.2-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
-RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
+RUN --mount=type=cache,id=railway-npm-cache,target=/root/.npm \
     npm ci --omit=dev
 
 
