@@ -16,10 +16,17 @@ import { CronModule } from '../modules/cron/cron.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(process.cwd(), 'dist', 'apps', 'logistica-view', 'browser'),
+      exclude: ['/api/(.*)'],
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
