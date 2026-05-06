@@ -99,8 +99,8 @@ export class ShipmentFormComponent implements OnInit, AfterViewInit {
       origen: ['', Validators.required],
       destino_id: ['', Validators.required],
       destino_texto: [''],
-      km: [0, [Validators.min(0)]],
-      flete: [0, [Validators.required, Validators.min(0)]],
+      km: [{ value: 0, disabled: true }, [Validators.min(0)]],
+      flete: [{ value: 0, disabled: true }, [Validators.min(0)]],
       valor_carga: [0],
       cajas: [0],
       peso: [0],
@@ -175,6 +175,17 @@ export class ShipmentFormComponent implements OnInit, AfterViewInit {
     return this.shipmentForm.get('monto_lab')?.value || 0;
   }
 
+  // Factor aplicado (calculado)
+  get factorAplicado(): string {
+    const destinoId = this.shipmentForm.get('destino_id')?.value;
+    if (!destinoId) return '0';
+    
+    const destino = this.destinations().find((d: any) => d.id === destinoId);
+    if (!destino || !destino.km) return '1.00';
+    
+    return destino.km > 300 ? '1.30' : '1.00';
+  }
+
   isInvalid(controlName: string): boolean {
     const control = this.shipmentForm.get(controlName);
     if (!control) {
@@ -232,25 +243,24 @@ export class ShipmentFormComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.loadCatalogs();
 
-    // Función para calcular km
-    const calcularKm = () => {
+    // Función para calcular km y flete automáticamente
+    const calcularKmYflete = () => {
       const destinoId = this.shipmentForm.get('destino_id')?.value;
       const origen = this.shipmentForm.get('origen')?.value;
 
       if (!destinoId || !origen) {
-        this.shipmentForm.patchValue({ km: 0 }, { emitEvent: false });
+        this.shipmentForm.patchValue({ km: 0, flete: 0 }, { emitEvent: false });
         return;
       }
 
       const destino = this.destinations().find((d: Destination) => d.id === destinoId);
 
       if (!destino) {
-        this.shipmentForm.patchValue({ km: 0 }, { emitEvent: false });
+        this.shipmentForm.patchValue({ km: 0, flete: 0 }, { emitEvent: false });
         return;
       }
 
-      // Si origen es igual al destino, km = 0
-      // Si no, km = distancia del destino * 2 (ida y vuelta)
+      // Calcular km (ida y vuelta)
       let km = 0;
       if (origen && origen === destino.nombre) {
         km = 0;
@@ -258,18 +268,27 @@ export class ShipmentFormComponent implements OnInit, AfterViewInit {
         km = destino.km * 2; // Ida y vuelta
       }
 
-      this.shipmentForm.patchValue({ km }, { emitEvent: false });
+      // Calcular flete basado en regla de factor
+      let flete = 0;
+      if (km > 0) {
+        const kmOneWay = destino.km || 0; // km de ida (sin retorno)
+        // Factor predeterminado es 1, si > 300km se suma $0.30
+        const factor = kmOneWay > 300 ? 1.30 : 1.00;
+        flete = km * factor;
+      }
+
+      this.shipmentForm.patchValue({ km, flete }, { emitEvent: false });
     };
 
-    // Calcular km automáticamente cuando cambia el destino
+    // Calcular km y flete automáticamente cuando cambia el destino
     this.shipmentForm.get('destino_id')?.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => calcularKm());
+    ).subscribe(() => calcularKmYflete());
 
-    // Calcular km automáticamente cuando cambia el origen
+    // Calcular km y flete automáticamente cuando cambia el origen
     this.shipmentForm.get('origen')?.valueChanges.pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(() => calcularKm());
+    ).subscribe(() => calcularKmYflete());
   }
 
   ngAfterViewInit(): void {

@@ -1,13 +1,16 @@
 const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+const fs = require('fs');
+if (fs.existsSync(path.resolve(__dirname, '../.env'))) {
+  require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+}
 
 module.exports = {
   development: {
-    client: 'postgresql',
+    client: 'pg',
     connection: {
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME || 'trade_marketing',
+      database: process.env.DB_NAME || 'megadulces_logistica',
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
     },
@@ -22,16 +25,16 @@ module.exports = {
     },
   },
   production: {
-    client: 'postgresql',
+    client: 'pg',
     connection: process.env.DATABASE_URL ? {
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     } : {
-      host: process.env.DB_HOST || process.env.PGHOST,
-      port: Number(process.env.DB_PORT || process.env.PGPORT) || 5432,
-      database: process.env.DB_NAME || process.env.PGDATABASE || 'trade_marketing',
-      user: process.env.DB_USER || process.env.PGUSER,
-      password: process.env.DB_PASSWORD || process.env.PGPASSWORD,
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME || 'megadulces_logistica',
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
       ssl: { rejectUnauthorized: false },
     },
     pool: { min: 2, max: 10 },

@@ -69,6 +69,16 @@ export class FotosService {
     return this.http.post<Foto>(`${this.apiUrl}/upload/${embarqueId}/${guiaId}`, formData);
   }
 
+  uploadGeneric(file: File, tipo: string, metadata?: any): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('tipo', tipo);
+    if (metadata) {
+      formData.append('metadata', JSON.stringify(metadata));
+    }
+    return this.http.post<any>(`${this.apiUrl}/upload-generic`, formData);
+  }
+
   /**
    * Subir foto en base64 (para firmas o capturas de canvas)
    */

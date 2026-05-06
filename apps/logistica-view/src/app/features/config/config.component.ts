@@ -14,6 +14,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { ListboxModule } from 'primeng/listbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ConfigService } from '../../core/services/logistics.service';
 import { CatalogService, CatalogEntry } from '../../core/services/catalog.service';
@@ -55,7 +56,7 @@ interface TarifasManiobra {
 @Component({
   selector: 'app-config',
   standalone: true,
-  imports: [
+   imports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -71,9 +72,11 @@ interface TarifasManiobra {
     IconFieldModule,
     InputIconModule,
     ListboxModule,
+    ToastModule,
     IconComponent
   ],
-  template: `
+   template: `
+    <p-toast position="bottom-right" [baseZIndex]="9999" />
     <div class="w-full space-y-4 animate-fade-in-up">
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -157,13 +160,15 @@ interface TarifasManiobra {
                 <td>
                   <input 
                     pInputText 
-                    [(ngModel)]="ruta.destino" 
+                    [ngModel]="ruta.destino" 
+                    (ngModelChange)="onDestinoChange(ruta, 'destino', $event)"
                     placeholder="DESTINO"
                     class="w-full !font-bold !text-brand uppercase" />
                 </td>
                 <td class="text-center">
                   <p-inputNumber 
-                    [(ngModel)]="ruta.comision_chofer" 
+                    [ngModel]="ruta.comision_chofer" 
+                    (ngModelChange)="onDestinoChange(ruta, 'comision_chofer', $event)"
                     mode="currency" 
                     currency="MXN" 
                     locale="es-MX"
@@ -171,7 +176,8 @@ interface TarifasManiobra {
                 </td>
                 <td class="text-center">
                   <p-inputNumber 
-                    [(ngModel)]="ruta.comision_repartidor" 
+                    [ngModel]="ruta.comision_repartidor" 
+                    (ngModelChange)="onDestinoChange(ruta, 'comision_repartidor', $event)"
                     mode="currency" 
                     currency="MXN" 
                     locale="es-MX"
@@ -179,7 +185,8 @@ interface TarifasManiobra {
                 </td>
                 <td class="text-center">
                   <p-inputNumber 
-                    [(ngModel)]="ruta.comision_ayudante" 
+                    [ngModel]="ruta.comision_ayudante" 
+                    (ngModelChange)="onDestinoChange(ruta, 'comision_ayudante', $event)"
                     mode="currency" 
                     currency="MXN" 
                     locale="es-MX"
@@ -187,7 +194,8 @@ interface TarifasManiobra {
                 </td>
                 <td class="text-center">
                   <p-inputNumber 
-                    [(ngModel)]="ruta.km_referencia" 
+                    [ngModel]="ruta.km_referencia" 
+                    (ngModelChange)="onDestinoChange(ruta, 'km_referencia', $event)"
                     [min]="0"
                     suffix=" km"
                     [useGrouping]="false"
@@ -250,14 +258,12 @@ interface TarifasManiobra {
                     class="w-full bg-surface-ground border border-divider rounded px-2 py-1 text-sm text-content-main text-center" />
                 </td>
                 <td class="py-3 px-4 text-center">
-                  <p-inputNumber 
-                    [(ngModel)]="factor.factor" 
-                    mode="currency"
-                    currency="MXN"
-                    locale="es-MX"
-                    [minFractionDigits]="2"
-                    [maxFractionDigits]="2"
-                    styleClass="w-28 text-center" />
+                  <span class="font-mono font-bold text-lg">
+                    {{ factor.factor === 1.30 ? '1.30' : '1.00' }}
+                  </span>
+                  <small class="text-xs text-content-muted mt-1 block">
+                    {{ factor.km > 300 ? 'Incluye +$0.30 (km > 300)' : 'Factor base' }}
+                  </small>
                 </td>
                 <td class="py-3 px-4 text-center">
                   <input 
@@ -666,6 +672,70 @@ export class ConfigComponent implements OnInit {
   private configService = inject(ConfigService);
   private confirmationService = inject(ConfirmationService);
   private messageService = inject(MessageService);
+  
+  // Debounce para evitar multiples notificaciones simultaneas
+  private lastNotification = { key: '', time: 0 };
+  
+  // Función unificada de notificación
+  showNotification(severity: 'success' | 'error' | 'info' | 'warn', summary: string, detail: string) {
+    const now = Date.now();
+    const key = `${severity}-${summary}`;
+    // Evitar duplicados en menos de 2 segundos
+    if (key === this.lastNotification.key && (now - this.lastNotification.time) < 2000) {
+      return;
+    }
+    this.lastNotification = { key, time: now };
+    this.messageService.add({ severity, summary, detail, life: 3000 });
+  }
+  
+  // Debounce para guardado automático
+  private saveTimeouts = new Map<string, any>();
+  
+  // Actualizar destino con debounce
+  updateDestino(id: string, data: any) {
+    // Limpiar timeout anterior si existe
+    if (this.saveTimeouts.has(id)) {
+      clearTimeout(this.saveTimeouts.get(id));
+    }
+    
+    // Establecer nuevo timeout (1 segundo después de dejar de escribir)
+    const timeout = setTimeout(() => {
+      console.log('[Config] Auto-saving destino:', id, data);
+      this.configService.updateDestino(id, data).subscribe({
+        next: (response) => {
+          console.log('[Config] Auto-save response:', response);
+          this.showNotification('success', 'Guardado', 'Los cambios se guardaron automáticamente');
+        },
+        error: (err) => {
+          console.error('[Config] Error auto-saving destino:', err);
+          this.showNotification('error', 'Error', 'No se pudieron guardar los cambios');
+        }
+      });
+      this.saveTimeouts.delete(id);
+    }, 1000);
+    
+    this.saveTimeouts.set(id, timeout);
+  }
+  
+  // Manejar cambios en campos de destino
+  onDestinoChange(ruta: any, field: string, value: any) {
+    // Actualizar el modelo local
+    ruta[field] = value;
+    
+    // Preparar datos para enviar (solo campos válidos)
+    const data: any = {};
+    
+    // Mapear destino a nombre si es el campo destino
+    if (field === 'destino') {
+      data.nombre = value;
+    } else {
+      data[field] = value;
+    }
+    
+    // Llamar update con debounce
+    this.updateDestino(ruta.id, data);
+  }
+  
   categorias = signal<string[]>([]);
   catSeleccionada = signal<string | null>(null);
   entradasCatalogo = signal<CatalogEntry[]>([]);
@@ -693,16 +763,24 @@ export class ConfigComponent implements OnInit {
   }
 
   loadDestinos() {
-    this.configService.getDestinos().subscribe(data => {
-      const rutas = data.map((d: any) => ({
-        id: d.id,
-        destino: d.nombre,
-        comision_chofer: d.comision_chofer || 0,
-        comision_repartidor: d.comision_repartidor || 0,
-        comision_ayudante: d.comision_ayudante || 0,
-        km_referencia: d.km || 0
-      }));
-      this.comisiones.set(rutas);
+    console.log('[Config] Loading destinos from API...');
+    this.configService.getDestinos().subscribe({
+      next: (data) => {
+        console.log('[Config] Destinos loaded:', data.length, 'items');
+        const rutas = data.map((d: any) => ({
+          id: d.id,
+          destino: d.nombre || d.destino || 'SIN NOMBRE',
+          comision_chofer: d.comision_chofer || 0,
+          comision_repartidor: d.comision_repartidor || 0,
+          comision_ayudante: d.comision_ayudante || 0,
+          km_referencia: d.km || d.km_referencia || 0
+        }));
+        console.log('[Config] Mapped rutas:', rutas.length, 'items');
+        this.comisiones.set(rutas);
+      },
+      error: (err) => {
+        console.error('[Config] Error loading destinos:', err);
+      }
     });
   }
 
@@ -720,16 +798,32 @@ export class ConfigComponent implements OnInit {
   }
 
   loadFactores() {
-    this.configService.getFinanzas().subscribe(data => {
-      const factoresData = data
-        .filter((d: any) => d.categoria === 'factor')
-        .map((d: any) => ({
-          id: d.id,
-          region: d.descripcion,
-          factor: parseFloat(d.valor),
-          referencia: d.descripcion
-        }));
-      this.factores.set(factoresData);
+    // Cargar rutas con km > 300 desde el catálogo de destinos
+    this.configService.getDestinos().subscribe({
+      next: (destinos: any[]) => {
+        console.log('[Config] loadFactores - Total destinos:', destinos.length);
+        const rutasLargas = destinos
+          .filter(d => parseFloat(d.km || d.km_referencia || 0) > 300)
+          .map(d => {
+            const km = parseFloat(d.km || d.km_referencia || 0);
+            const kmOneWay = km; // km de ida (sin retorno)
+            // Factor predeterminado es 1, si > 300km se suma 0.30
+            const factorCalculado = kmOneWay > 300 ? 1.30 : 1;
+            
+            return {
+              id: d.id,
+              region: d.nombre || d.destino,
+              factor: factorCalculado, // 1 o 1.30 (no editable)
+              referencia: d.nombre || d.destino,
+              km: km
+            };
+          });
+        console.log('[Config] loadFactores - Rutas > 300km:', rutasLargas.length, rutasLargas);
+        this.factores.set(rutasLargas);
+      },
+      error: (err) => {
+        console.error('[Config] Error loading factores:', err);
+      }
     });
   }
 
@@ -786,28 +880,16 @@ export class ConfigComponent implements OnInit {
         this.catalogService.deleteEntry(id).subscribe({
           next: () => {
             this.selectCategory(this.catSeleccionada()!);
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Eliminado', 
-              detail: `La entrada "${entry.etiqueta}" ha sido eliminada` 
-            });
+            this.showNotification('success', 'Eliminado', `La entrada "${entry.etiqueta}" ha sido eliminada`);
           },
           error: (err) => {
             console.error('Error al eliminar entrada:', err);
-            this.messageService.add({ 
-              severity: 'error', 
-              summary: 'Error', 
-              detail: 'No se pudo eliminar la entrada' 
-            });
+            this.showNotification('error', 'Error', 'No se pudo eliminar la entrada');
           }
         });
       },
       reject: () => {
-        this.messageService.add({ 
-          severity: 'info', 
-          summary: 'Cancelado', 
-          detail: 'La eliminación fue cancelada' 
-        });
+        this.showNotification('info', 'Cancelado', 'La eliminación fue cancelada');
       }
     });
   }
@@ -839,9 +921,8 @@ export class ConfigComponent implements OnInit {
 
   nuevaRuta() {
     console.log('[Config] nuevaRuta() called');
-    const newRuta: ComisionRuta = {
-      id: '',
-      destino: 'NUEVO DESTINO',
+    const newRuta: any = {
+      nombre: 'NUEVO DESTINO',
       comision_chofer: 0,
       comision_repartidor: 0,
       comision_ayudante: 0,
@@ -851,20 +932,13 @@ export class ConfigComponent implements OnInit {
     this.configService.createDestino(newRuta).subscribe({
       next: (created) => {
         console.log('[Config] Destino created successfully:', created);
-        this.comisiones.update(list => [...list, { ...newRuta, id: created.id }]);
-        this.nuevaRutaId.set(created.id);
-        // Scroll to the new row after DOM update
-        setTimeout(() => {
-          const element = document.getElementById(`ruta-${created.id}`);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Remove highlight after 2 seconds
-            setTimeout(() => this.nuevaRutaId.set(null), 2000);
-          }
-        }, 100);
+        // Recargar la lista desde la BD
+        this.loadDestinos();
+        this.showNotification('success', 'Creado', `La ruta "${created.nombre}" ha sido creada`);
       },
       error: (err) => {
         console.error('Error al crear ruta:', err);
+        this.showNotification('error', 'Error', 'No se pudo crear la ruta');
       }
     });
   }
@@ -892,28 +966,16 @@ export class ConfigComponent implements OnInit {
         this.configService.deleteDestino(ruta.id).subscribe({
           next: () => {
             this.comisiones.update(list => list.filter((_, i) => i !== index));
-            this.messageService.add({ 
-              severity: 'success', 
-              summary: 'Eliminado', 
-              detail: `La ruta "${ruta.destino}" ha sido eliminada` 
-            });
+            this.showNotification('success', 'Eliminado', `La ruta "${ruta.destino}" ha sido eliminada`);
           },
           error: (err) => {
             console.error('Error al eliminar ruta:', err);
-            this.messageService.add({ 
-              severity: 'error', 
-              summary: 'Error', 
-              detail: 'No se pudo eliminar la ruta' 
-            });
+            this.showNotification('error', 'Error', 'No se pudo eliminar la ruta');
           }
         });
       },
       reject: () => {
-        this.messageService.add({ 
-          severity: 'info', 
-          summary: 'Cancelado', 
-          detail: 'La eliminación fue cancelada' 
-        });
+        this.showNotification('info', 'Cancelado', 'La eliminación fue cancelada');
       }
     });
   }
@@ -939,18 +1001,10 @@ export class ConfigComponent implements OnInit {
       },
       accept: () => {
         this.factores.update(list => list.filter((_, i) => i !== index));
-        this.messageService.add({ 
-          severity: 'success', 
-          summary: 'Eliminado', 
-          detail: `El factor "${factor.region}" ha sido eliminado` 
-        });
+        this.showNotification('success', 'Eliminado', `El factor "${factor.region}" ha sido eliminado`);
       },
       reject: () => {
-        this.messageService.add({ 
-          severity: 'info', 
-          summary: 'Cancelado', 
-          detail: 'La eliminación fue cancelada' 
-        });
+        this.showNotification('info', 'Cancelado', 'La eliminación fue cancelada');
       }
     });
   }
@@ -988,18 +1042,10 @@ export class ConfigComponent implements OnInit {
       },
       accept: () => {
         this.costosUnidad.update(list => list.filter((_, i) => i !== index));
-        this.messageService.add({ 
-          severity: 'success', 
-          summary: 'Eliminado', 
-          detail: `La unidad "${unidad.nombre}" ha sido eliminada` 
-        });
+        this.showNotification('success', 'Eliminado', `La unidad "${unidad.nombre}" ha sido eliminada`);
       },
       reject: () => {
-        this.messageService.add({ 
-          severity: 'info', 
-          summary: 'Cancelado', 
-          detail: 'La eliminación fue cancelada' 
-        });
+        this.showNotification('info', 'Cancelado', 'La eliminación fue cancelada');
       }
     });
   }

@@ -6,6 +6,20 @@ import type { Knex } from 'knex';
 export class StaffService {
   constructor(@Inject(KNEX_CONNECTION) private readonly knex: Knex) {}
 
+  async getRoles() {
+    const roles = await this.knex('role_permissions')
+      .distinct('role_name')
+      .whereLike('role_name', 'log_%')
+      .orderBy('role_name');
+    return roles.map(r => {
+      const clean = r.role_name.replace('log_', '').replace('_', ' ');
+      return {
+        label: clean.replace(/\b\w/g, (c: string) => c.toUpperCase()),
+        value: r.role_name.replace('log_', '')
+      };
+    });
+  }
+
   async findAll() {
     return this.knex('logistica_colaboradores').select('*').orderBy('nombre', 'asc');
   }
@@ -23,12 +37,13 @@ export class StaffService {
   }
 
   async update(id: string, data: Partial<any>) {
+    const payload: any = { ...data, updated_at: new Date() };
+    if (payload.roles && !Array.isArray(payload.roles)) {
+      payload.roles = [payload.roles];
+    }
     const [result] = await this.knex('logistica_colaboradores')
       .where({ id })
-      .update({
-        ...data,
-        updated_at: new Date()
-      })
+      .update(payload)
       .returning('*');
     return result;
   }

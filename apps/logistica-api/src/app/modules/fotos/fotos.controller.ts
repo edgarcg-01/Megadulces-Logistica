@@ -54,6 +54,22 @@ export class FotosController {
     );
   }
 
+  @Post('upload-generic')
+  @ApiOperation({ summary: 'Subir foto genérica (para flota u otros)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadGeneric(
+    @UploadedFile() file: any,
+    @Body() body: { 
+      tipo: string; 
+      metadata?: string;
+    },
+  ) {
+    if (!file) throw new Error('No file provided');
+    const metadata = body.metadata ? JSON.parse(body.metadata) : {};
+    return this.fotosService.subirFotoGenerica(file, body.tipo, metadata);
+  }
+
   @Post('upload-base64/:embarqueId/:guiaId')
   @ApiOperation({ summary: 'Subir foto en base64 (para firma o captura de cámara)' })
   async uploadFotoBase64(

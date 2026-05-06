@@ -33,4 +33,20 @@ export class FleetService {
   async remove(id: string) {
     return this.knex('logistica_unidades').where({ id }).del();
   }
+
+  async getHistory(id: string) {
+    const bitacora = await this.knex('logistica_bitacora_uso')
+      .where({ unidad_id: id })
+      .orderBy('fecha_salida', 'desc');
+    
+    const mantenimientos = await this.knex('logistica_mantenimientos')
+      .where({ unidad_id: id })
+      .orderBy('fecha_servicio', 'desc');
+
+    const combustible = await this.knex('logistica_combustible_transacciones')
+      .where({ unidad_id: id })
+      .orderBy('fecha', 'desc');
+
+    return { bitacora, mantenimientos, combustible };
+  }
 }

@@ -11,11 +11,11 @@ import { Permission } from '@megadulces/shared-auth/core';
 export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
-  @Post()
-  @RequirePermissions(Permission.LOG_COLABORADORES_GESTIONAR)
-  @ApiOperation({ summary: 'Crear un nuevo colaborador de logística' })
-  create(@Body() data: any) {
-    return this.staffService.create(data);
+  @Get('roles')
+  @RequirePermissions(Permission.LOG_COLABORADORES_VER)
+  @ApiOperation({ summary: 'Obtener roles válidos para colaboradores' })
+  getRoles() {
+    return this.staffService.getRoles();
   }
 
   @Get()
@@ -29,6 +29,13 @@ export class StaffController {
   @RequirePermissions(Permission.LOG_COLABORADORES_VER)
   findOne(@Param('id') id: string) {
     return this.staffService.findOne(id);
+  }
+
+  @Post()
+  @RequirePermissions(Permission.LOG_COLABORADORES_GESTIONAR)
+  @ApiOperation({ summary: 'Crear un nuevo colaborador de logística' })
+  create(@Body() data: any) {
+    return this.staffService.create(data);
   }
 
   @Patch(':id')

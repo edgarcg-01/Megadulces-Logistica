@@ -144,6 +144,15 @@
         "hash": "sha512-1bCSESV6Pv+i21Hvpxp3Dx+pSD8lIPt8uVjRrxAUt/nbswYc+tK6Y2btiULjd4+fnq15PX+nqQDC7Oft7WkwcA=="
       }
     },
+    "npm:semver@4.3.2": {
+      "type": "npm",
+      "name": "npm:semver@4.3.2",
+      "data": {
+        "version": "4.3.2",
+        "packageName": "semver",
+        "hash": "sha512-VyFUffiBx8hABJ9HYSTXLRwyZtdDHMzMtFmID1aiNAD2BZppBmJm0Hqw3p2jkgxP9BNt1pQ9RnC49P0EcXf6cA=="
+      }
+    },
     "npm:semver": {
       "type": "npm",
       "name": "npm:semver",
@@ -11124,6 +11133,15 @@
         "hash": "sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ=="
       }
     },
+    "npm:buffer-writer": {
+      "type": "npm",
+      "name": "npm:buffer-writer",
+      "data": {
+        "version": "2.0.0",
+        "packageName": "buffer-writer",
+        "hash": "sha512-a7ZpuTZU1TRtnwyCNW3I5dc0wWNC3VR9S++Ewyk2HHZdrO3CQJqSpd+95Us590V6AL7JqUAH2IwZ/398PmNFgw=="
+      }
+    },
     "npm:bundle-name": {
       "type": "npm",
       "name": "npm:bundle-name",
@@ -11428,6 +11446,15 @@
         "version": "2.2.1",
         "packageName": "cli-boxes",
         "hash": "sha512-y4coMcylgSCdVinjiDBuR8PCC2bLjyGTwEmPb9NHR/QaNU6EUOXcTY/s6VjGMD6ENSEaeQYHCY0GNGS5jfMwPw=="
+      }
+    },
+    "npm:cli-progress": {
+      "type": "npm",
+      "name": "npm:cli-progress",
+      "data": {
+        "version": "1.8.0",
+        "packageName": "cli-progress",
+        "hash": "sha512-YyaOWJ4wyGj2DizIJ1mzws7OdytPSp2TwEAaLJRCGBO8DwJDOl9IeBvdq+rEzgYsN3ltK43aOxKaj2qkku3BIg=="
       }
     },
     "npm:cli-table3": {
@@ -16938,6 +16965,15 @@
         "hash": "sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw=="
       }
     },
+    "npm:packet-reader": {
+      "type": "npm",
+      "name": "npm:packet-reader",
+      "data": {
+        "version": "1.0.0",
+        "packageName": "packet-reader",
+        "hash": "sha512-HAKu/fG3HpHFO0AA8WE8q2g+gBJaZ9MG7fcKk+IJPLTGAD6Psw4443l+9DGRbOIh3/aXr7Phy0TjilYivJo5XQ=="
+      }
+    },
     "npm:pacote": {
       "type": "npm",
       "name": "npm:pacote",
@@ -17154,6 +17190,15 @@
         "hash": "sha512-ldhMxz2r8fl/6QkXnBD3CR9/xg694oT6DZQ2s6c/RI28OjtSOpxnPrUCGOBJ46RCUxcWdx3p6kw/xnDHjKvaRA=="
       }
     },
+    "npm:pg@7.18.2": {
+      "type": "npm",
+      "name": "npm:pg@7.18.2",
+      "data": {
+        "version": "7.18.2",
+        "packageName": "pg",
+        "hash": "sha512-Mvt0dGYMwvEADNKy5PMQGlzPudKcKKzJds/VbOeZJpb6f/pI3mmoXX0JksPgI3l3JPP/2Apq7F36O63J7mgveA=="
+      }
+    },
     "npm:pg-cloudflare": {
       "type": "npm",
       "name": "npm:pg-cloudflare",
@@ -17172,6 +17217,15 @@
         "hash": "sha512-ch6OwaeaPYcova4kKZ15sbJ2hKb/VP48ZD2gE7i1J+L4MspCtBMAx8nMgz7bksc7IojCIIWuEhHibSMFH8m8oA=="
       }
     },
+    "npm:pg-connection-string@0.1.3": {
+      "type": "npm",
+      "name": "npm:pg-connection-string@0.1.3",
+      "data": {
+        "version": "0.1.3",
+        "packageName": "pg-connection-string",
+        "hash": "sha512-i0NV/CrSkFTaiOQs9AGy3tq0dkSjtTd4d7DfsjeDVZAA4aIHInwfFEmriNYGGJUfZ5x6IAC/QddoUpUJjQAi0w=="
+      }
+    },
     "npm:pg-connection-string@2.12.0": {
       "type": "npm",
       "name": "npm:pg-connection-string@2.12.0",
@@ -17179,6 +17233,33 @@
         "version": "2.12.0",
         "packageName": "pg-connection-string",
         "hash": "sha512-U7qg+bpswf3Cs5xLzRqbXbQl85ng0mfSV/J0nnA31MCLgvEaAo7CIhmeyrmJpOr7o+zm0rXK+hNnT5l9RHkCkQ=="
+      }
+    },
+    "npm:pg-dump": {
+      "type": "npm",
+      "name": "npm:pg-dump",
+      "data": {
+        "version": "0.10.0",
+        "packageName": "pg-dump",
+        "hash": "sha512-zXDGJMZc27g0YHs+8WB1RMqnyq4rU85IhVEMl5jgMlrtX8lJbVYg9qfAg/+DbrCnTwADIVdZOFc8EoLhvddUlQ=="
+      }
+    },
+    "npm:pg-pool@2.0.10": {
+      "type": "npm",
+      "name": "npm:pg-pool@2.0.10",
+      "data": {
+        "version": "2.0.10",
+        "packageName": "pg-pool",
+        "hash": "sha512-qdwzY92bHf3nwzIUcj+zJ0Qo5lpG/YxchahxIN8+ZVmXqkahKXsnl2aiJPHLYN9o5mB/leG+Xh6XKxtP7e0sjg=="
+      }
+    },
+    "npm:pg-pool": {
+      "type": "npm",
+      "name": "npm:pg-pool",
+      "data": {
+        "version": "3.13.0",
+        "packageName": "pg-pool",
+        "hash": "sha512-gB+R+Xud1gLFuRD/QgOIgGOBE2KCQPaPwkzBBGC9oG69pHTkhQeIuejVIk3/cnDyX39av2AxomQiyPT13WKHQA=="
       }
     },
     "npm:pg-int8": {
@@ -17190,13 +17271,13 @@
         "hash": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw=="
       }
     },
-    "npm:pg-pool": {
+    "npm:pg-packet-stream": {
       "type": "npm",
-      "name": "npm:pg-pool",
+      "name": "npm:pg-packet-stream",
       "data": {
-        "version": "3.13.0",
-        "packageName": "pg-pool",
-        "hash": "sha512-gB+R+Xud1gLFuRD/QgOIgGOBE2KCQPaPwkzBBGC9oG69pHTkhQeIuejVIk3/cnDyX39av2AxomQiyPT13WKHQA=="
+        "version": "1.1.0",
+        "packageName": "pg-packet-stream",
+        "hash": "sha512-kRBH0tDIW/8lfnnOyTwKD23ygJ/kexQVXZs7gEyBljw4FYqimZFxnMMx50ndZ8In77QgfGuItS5LLclC2TtjYg=="
       }
     },
     "npm:pg-protocol": {
@@ -38699,6 +38780,11 @@
       "type": "static"
     },
     {
+      "source": "npm:cli-progress",
+      "target": "npm:colors",
+      "type": "static"
+    },
+    {
       "source": "npm:cli-table3",
       "target": "npm:string-width",
       "type": "static"
@@ -47746,6 +47832,61 @@
     {
       "source": "npm:pg",
       "target": "npm:pg-cloudflare",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg-dump",
+      "target": "npm:cli-progress",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg-dump",
+      "target": "npm:pg@7.18.2",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:buffer-writer",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:packet-reader",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:pg-connection-string@0.1.3",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:pg-packet-stream",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:pg-pool@2.0.10",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:pg-types",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:pgpass",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg@7.18.2",
+      "target": "npm:semver@4.3.2",
+      "type": "static"
+    },
+    {
+      "source": "npm:pg-pool@2.0.10",
+      "target": "npm:pg@7.18.2",
       "type": "static"
     },
     {

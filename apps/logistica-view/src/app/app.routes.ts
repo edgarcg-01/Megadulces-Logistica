@@ -8,6 +8,11 @@ export const appRoutes: Route[] = [
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'projects',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/projects/projects.component').then(m => m.ProjectsComponent)
+  },
+  {
     path: '',
     canActivate: [authGuard],
     loadComponent: () => import('./core/layout/layout.component').then(m => m.LayoutComponent),
@@ -30,7 +35,7 @@ export const appRoutes: Route[] = [
       {
         path: 'fleet',
         canActivate: [driverGuard],
-        loadComponent: () => import('./features/fleet/fleet.component').then(m => m.FleetComponent)
+        loadChildren: () => import('./features/fleet/fleet.routes').then(m => m.FLEET_ROUTES)
       },
       {
         path: 'shipments',

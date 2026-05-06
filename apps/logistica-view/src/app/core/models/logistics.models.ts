@@ -25,6 +25,7 @@ export interface Destination {
   comision_chofer: number;
   comision_ayudante: number;
   km?: number;
+  factor?: number;
 }
 
 export interface FinanceConfig {

@@ -11,13 +11,6 @@ exports.up = function(knex) {
       )
       .del();
 
-    // Primero eliminar datos que violan la foreign key en logistica_fotos_entrega
-    await trx('logistica_fotos_entrega')
-      .whereNotExists(
-        trx('users').select('id').whereRaw('logistica_fotos_entrega.subido_por = users.id')
-      )
-      .del();
-
     // Corregir foreign key de logistica_checklists.creado_por
     await trx.schema
       .alterTable('logistica_checklists', (table) => {
@@ -25,12 +18,21 @@ exports.up = function(knex) {
         table.foreign('creado_por').references('id').inTable('users');
       });
 
-    // Corregir foreign key de logistica_fotos_entrega.subido_por
-    await trx.schema
-      .alterTable('logistica_fotos_entrega', (table) => {
-        table.dropForeign('subido_por');
-        table.foreign('subido_por').references('id').inTable('users');
-      });
+    // Corregir foreign key de logistica_fotos_entrega.subido_por (si existe)
+    const hasSubidoPor = await trx.schema.hasColumn('logistica_fotos_entrega', 'subido_por');
+    if (hasSubidoPor) {
+      await trx('logistica_fotos_entrega')
+        .whereNotExists(
+          trx('users').select('id').whereRaw('logistica_fotos_entrega.subido_por = users.id')
+        )
+        .del();
+
+      await trx.schema
+        .alterTable('logistica_fotos_entrega', (table) => {
+          table.dropForeign('subido_por');
+          table.foreign('subido_por').references('id').inTable('users');
+        });
+    }
   });
 };
 

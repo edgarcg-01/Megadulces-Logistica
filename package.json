@@ -64,6 +64,7 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.20.0",
+    "pg-dump": "^0.10.0",
     "primeicons": "^7.0.0",
     "primeng": "^18.0.2",
     "puppeteer": "^24.42.0",

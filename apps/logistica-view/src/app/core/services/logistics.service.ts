@@ -61,6 +61,32 @@ export class FleetService {
   update(id: string, data: any): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/${id}`, data);
   }
+
+  getHistory(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}/history`);
+  }
+
+  // Bitácora de Uso
+  checkIn(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/usage/check-in`, data);
+  }
+
+  checkOut(id: string, data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/usage/${id}/check-out`, data);
+  }
+
+  getActiveLogs(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/usage/active`);
+  }
+
+  // Mantenimientos
+  createMaintenance(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/maintenance`, data);
+  }
+
+  getMaintenance(filters: any = {}): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/maintenance`, { params: filters });
+  }
 }
 
 @Injectable({
@@ -81,6 +107,10 @@ export class StaffService {
 
   update(id: string, data: any): Observable<any> {
     return this.http.patch<any>(`${this.apiUrl}/${id}`, data);
+  }
+
+  getRoles(): Observable<{ label: string; value: string }[]> {
+    return this.http.get<{ label: string; value: string }[]>(`${this.apiUrl}/roles`);
   }
 }
 

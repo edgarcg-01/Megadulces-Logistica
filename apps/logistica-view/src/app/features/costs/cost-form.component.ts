@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, output, DestroyRef, input, effect } from '@angular/core';
+import { Component, OnInit, inject, signal, output, DestroyRef, input } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -28,7 +28,7 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
               <app-icon name="currency-dollar" size="md" class="text-brand"></app-icon>
             </div>
             <div>
-              <h2 class="text-lg font-black text-content-main uppercase tracking-widest">
+              <h2 class="text-lg font-black text-content-main uppercase tracking-tight">
                 {{ costToEdit() ? 'Editar Costo' : 'Registrar Costo de Embarque' }}
               </h2>
               <p class="text-xs text-content-muted uppercase tracking-wider font-bold">Control financiero por ruta</p>
@@ -68,7 +68,8 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
                     optionLabel="folio" 
                     optionValue="id" 
                     placeholder="Seleccionar embarque..."
-                    styleClass="w-full">
+                    styleClass="w-full"
+                    (onChange)="onEmbarqueChange($event)">
                     <ng-template pTemplate="selectedItem">
                       <div class="font-bold flex items-center gap-2" *ngIf="selectedShipmentDetails()">
                         {{ selectedShipmentDetails()?.folio }} 
@@ -83,41 +84,20 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
                     </ng-template>
                   </p-select>
                 </div>
-              </div>
 
-              <!-- Referencias extraídas del embarque -->
-              @if (selectedShipmentDetails()) {
-                <div class="mt-4 p-3 bg-surface-ground border border-divider rounded-lg grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span class="text-content-muted uppercase tracking-wider block text-[9px]">Distancia</span>
-                    <span class="font-mono font-bold">{{ selectedShipmentDetails()?.km || 0 }} km</span>
+                <!-- Resumen del embarque seleccionado -->
+                @if (selectedShipmentDetails()) {
+                  <div class="mt-2 p-3 bg-surface-ground border border-divider rounded-lg grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span class="text-content-muted uppercase tracking-wider block text-[9px]">Distancia</span>
+                      <span class="font-mono font-bold">{{ selectedShipmentDetails()?.km || 0 }} km</span>
+                    </div>
+                    <div>
+                      <span class="text-content-muted uppercase tracking-wider block text-[9px]">Unidad</span>
+                      <span class="font-mono font-bold">{{ selectedShipmentDetails()?.unidad_placa || 'N/A' }}</span>
+                    </div>
                   </div>
-                  <div>
-                    <span class="text-content-muted uppercase tracking-wider block text-[9px]">Unidad</span>
-                    <span class="font-mono font-bold">{{ selectedShipmentDetails()?.unidad_placa || 'N/A' }}</span>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- COSTOS FIJOS (Calculados) -->
-            <div class="card-premium p-4 border-l-4 border-brand-orange">
-              <div class="flex items-center gap-2 mb-3 pb-2 border-b border-divider">
-                <app-icon name="calculator" size="sm" class="text-brand-orange"></app-icon>
-                <span class="font-semibold text-content-main uppercase tracking-wide text-xs">Costo Fijo de Unidad</span>
-              </div>
-              <p class="text-[10px] text-content-muted mb-3 leading-tight">Calculado automáticamente prorrateando los km recorridos del embarque por el costo fijo catalogado de la unidad.</p>
-              
-              <div class="flex flex-col gap-1">
-                <label class="text-label">Costo Fijo Total ($)</label>
-                <p-inputNumber formControlName="costo_fijo_km" mode="currency" currency="MXN" locale="es-MX" styleClass="w-full font-mono font-bold text-score-high" [readonly]="true" />
-              </div>
-            </div>
-            
-            <div class="card-premium p-4 bg-surface-ground/30">
-              <div class="flex flex-col gap-1">
-                <label class="text-label">Observaciones</label>
-                <textarea pTextarea formControlName="observaciones" rows="3" class="w-full text-sm"></textarea>
+                }
               </div>
             </div>
           </div>
@@ -191,17 +171,17 @@ import { CostsService, ShipmentsService } from '../../core/services/logistics.se
 
         <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-divider">
           <p-button type="button" label="Cancelar" severity="secondary" [outlined]="true" (onClick)="canceled.emit()" />
-          <p-button type="submit" [label]="saving() ? 'Guardando...' : 'Guardar Costos'" styleClass="p-button-brand font-bold uppercase" [loading]="saving()" [disabled]="costForm.invalid || saving()" />
+          <p-button type="submit" [label]="saving() ? 'Guardando...' : 'Guardar Costos'" styleClass="p-button-brand font-bold uppercase tracking-widest text-xs px-6 py-3" [loading]="saving()" [disabled]="costForm.invalid || saving()" />
         </div>
       </form>
     </div>
   `
 })
 export class CostFormComponent implements OnInit {
-  costToEdit = input<any>(null);
-  prefillFromShipment = input<any>(null);
   saved = output<any>();
   canceled = output<void>();
+  costToEdit = input<any>(null);
+  prefillFromShipment = input<any>(null);
 
   private fb = inject(FormBuilder);
   private costsService = inject(CostsService);
@@ -213,14 +193,12 @@ export class CostFormComponent implements OnInit {
   selectedShipmentDetails = signal<any>(null);
   saving = signal(false);
   submitError = signal<string | null>(null);
-
-  // Valor hardcodeado para la demo, debería venir del catálogo de la unidad
-  private COSTO_UNITARIO_KM = 3.50; 
+  COSTO_UNITARIO_KM = 1.50; // Costo por km (configurable)
 
   constructor() {
     this.costForm = this.fb.group({
       embarque_id: ['', Validators.required],
-      combustible: [0],
+      combustble: [0],
       casetas: [0],
       hospedaje: [0],
       pensiones: [0],
@@ -228,89 +206,79 @@ export class CostFormComponent implements OnInit {
       talachas: [0],
       ayudantes_ext: [0],
       maniobras: [0],
-      viaticos_guia: [0],
+      viaticos_guia: [{ value: 0, disabled: true }],
       otros: [0],
-      observaciones: [''],
-      // Campos calculados
       subtotal_operativo: [{ value: 0, disabled: true }],
       costo_fijo_km: [{ value: 0, disabled: true }],
-      total: [{ value: 0, disabled: true }]
+      total: [{ value: 0, disabled: true }],
+      observaciones: ['']
     });
-
-    // Recalcular totales cada vez que cambia un campo monetario
-    this.costForm.valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((val) => {
-      // Necesitamos evitar loops infinitos si modificamos los calculados, asi que lo hacemos manual
-      this.recalculateTotals();
-    });
-
-    // Detectar selección de embarque
-    this.costForm.get('embarque_id')?.valueChanges.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((id) => {
-      if (id) {
-        this.loadShipmentData(id);
-      } else {
-        this.selectedShipmentDetails.set(null);
-      }
-    });
-
-    effect(() => {
-      const cost = this.costToEdit();
-      if (cost) {
-        // En modo edición cargamos también la data específica para no perder el detalle del embarque
-        this.costForm.patchValue({
-          ...cost,
-          embarque_id: cost.embarque_id // esto triggereará la carga del embarque via valueChanges
-        }, { emitEvent: true });
-      } else {
-        this.costForm.reset({
-          combustible: 0, casetas: 0, hospedaje: 0, pensiones: 0,
-          permisos: 0, talachas: 0, ayudantes_ext: 0, maniobras: 0, viaticos_guia: 0, otros: 0
-        });
-      }
-    }, { allowSignalWrites: true });
-
-    effect(() => {
-      const shipment = this.prefillFromShipment();
-      if (shipment && shipment.embarque_id) {
-        // Prefill the form with shipment data
-        // The valueChanges on embarque_id will trigger loadShipmentData
-        this.costForm.patchValue({
-          embarque_id: shipment.embarque_id
-        }, { emitEvent: true });
-      }
-    }, { allowSignalWrites: true });
   }
 
-  ngOnInit() {
-    // Estados permitidos para registrar costos (chofer debe haber completado la ruta)
-    const estadosPermitidos = ['checklist_llegada', 'costos_pendientes', 'completado'];
+  ngOnInit(): void {
+    this.loadShipments();
+    
+    // Cargar datos si estamos editando
+    const cost = this.costToEdit();
+    if (cost) {
+      this.costForm.patchValue({
+        embarque_id: cost.embarque_id,
+        combustble: parseFloat(cost.combustible) || 0,
+        casetas: parseFloat(cost.casetas) || 0,
+        hospedaje: parseFloat(cost.hospedaje) || 0,
+        pensiones: parseFloat(cost.pensiones) || 0,
+        permisos: parseFloat(cost.permisos) || 0,
+        talachas: parseFloat(cost.talachas) || 0,
+        ayudantes_ext: parseFloat(cost.ayudantes_ext) || 0,
+        maniobras: parseFloat(cost.maniobras) || 0,
+        viaticos_guia: parseFloat(cost.viaticos_guia) || 0,
+        otros: parseFloat(cost.otros) || 0,
+        subtotal_operativo: parseFloat(cost.subtotal_operativo) || 0,
+        costo_fijo_km: parseFloat(cost.costo_fijo_km) || 0,
+        total: parseFloat(cost.total) || 0,
+        observaciones: cost.observaciones || ''
+      });
+      
+      // Cargar detalles del embarque
+      const shipment = this.shipments().find(s => s.id === cost.embarque_id);
+      if (shipment) {
+        this.selectedShipmentDetails.set(shipment);
+      }
+    }
 
-    this.shipmentsService.findAll().subscribe(data => {
-      // Cargar costos existentes para filtrar embarques sin costos
-      this.costsService.findAll().subscribe(costs => {
-        const embarqueIdsConCostos = new Set(costs.map((c: any) => c.embarque_id));
+    // Si se requiere pre-llenar desde un embarque
+    const prefill = this.prefillFromShipment();
+    if (prefill && prefill.embarque_id) {
+      setTimeout(() => {
+        this.costForm.patchValue({
+          embarque_id: prefill.embarque_id
+        }, { emitEvent: true });
+      }, 0);
+    }
 
-        // Filtrar embarques que:
-        // 1. No tengan costos registrados
-        // 2. Estén en estados permitidos (chofer completó la ruta)
-        const embarquesValidos = data.filter((s: any) => {
-          const sinCostos = !embarqueIdsConCostos.has(s.id);
-          const estadoValido = estadosPermitidos.includes(s.estado);
-          return sinCostos && estadoValido;
-        });
+    // Recalculr cuando cambian los valores operativos
+    this.costForm.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(() => {
+      this.recalculateTotals();
+    });
+  }
 
-        this.shipments.set(embarquesValidos);
-
-        // After shipments load, check if we need to prefill from a shipment
+  loadShipments() {
+    this.shipmentsService.findAll().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: (data: any[]) => {
+        // Filtrar solo embarques que permiten registrar costos
+        const estadosPermitidos = ['checklist_llegada', 'costos_pendientes', 'completado'];
+        const available = data.filter((s: any) => estadosPermitidos.includes(s.estado));
+        this.shipments.set(available);
+        
+        // After shipments load, check if we need to prefill
         const shipment = this.prefillFromShipment();
         if (shipment && shipment.embarque_id) {
-          // Find the shipment in the loaded data
-          const found = embarquesValidos.find((s: any) => s.id === shipment.embarque_id);
+          const found = available.find((s: any) => s.id === shipment.embarque_id);
           if (found) {
-            // Trigger the value change to load shipment data
             setTimeout(() => {
               this.costForm.patchValue({
                 embarque_id: shipment.embarque_id
@@ -318,28 +286,41 @@ export class CostFormComponent implements OnInit {
             }, 0);
           }
         }
-      });
+      }
     });
   }
 
-  loadShipmentData(embarqueId: string) {
+  onEmbarqueChange(event: any) {
+    const embarqueId = event.value;
+    if (!embarqueId) {
+      this.selectedShipmentDetails.set(null);
+      return;
+    }
+
     const shipment = this.shipments().find(s => s.id === embarqueId);
     if (shipment) {
       this.selectedShipmentDetails.set(shipment);
       this.calculateFixedCosts(shipment.km);
       
-      // Auto cargar viáticos si existen (simulación: asumiendo que vienen en el objeto o se consultan)
-      // En la vida real harías: this.shipmentsService.findOne(embarqueId)
-      this.shipmentsService.findOne(embarqueId).subscribe(res => {
-        let viaticosTotal = 0;
-        if (res.guias && res.guias.length > 0) {
-           viaticosTotal = res.guias.reduce((acc: number, curr: any) => acc + Number(curr.viaticos_total || 0), 0);
+      // Cargar viáticos desde las guías
+      this.shipmentsService.findOne(embarqueId).subscribe({
+        next: (res) => {
+          let viaticosTotal = 0;
+          
+          // Sumar viáticos de todas las guías
+          if (res.guias && res.guias.length > 0) {
+            viaticosTotal = res.guias.reduce((acc: number, curr: any) => {
+              const viaticos = parseFloat(curr.viaticos_total) || parseFloat(curr.viaticos) || 0;
+              return acc + viaticos;
+            }, 0);
+          }
+          
+          this.costForm.patchValue({
+            viaticos_guia: viaticosTotal
+          }, { emitEvent: false });
+          
+          this.recalculateTotals();
         }
-        
-        this.costForm.patchValue({
-          viaticos_guia: viaticosTotal
-        }, { emitEvent: false }); // evitamo loop infinito
-        this.recalculateTotals();
       });
     }
   }

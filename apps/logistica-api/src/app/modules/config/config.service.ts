@@ -42,8 +42,7 @@ export class ConfigService {
 
   async createDestino(data: any) {
     try {
-      // Generate a unique nombre by appending a counter if needed
-      const baseNombre = data.destino || 'NUEVO DESTINO';
+      const baseNombre = data.destino || data.nombre || 'NUEVO DESTINO';
       let nombre = baseNombre;
       let counter = 1;
 
@@ -51,14 +50,14 @@ export class ConfigService {
         try {
           const [result] = await this.knex('logistica_catalogo_destinos').insert({
             nombre: nombre,
-            comision_chofer: data.comision_chofer || 0,
-            comision_repartidor: data.comision_repartidor || 0,
-            comision_ayudante: data.comision_ayudante || 0,
-            km: data.km_referencia || 0
+            comision_chofer: parseFloat(data.comision_chofer) || parseFloat(data.comision_chofer) || 0,
+            comision_repartidor: parseFloat(data.comision_repartidor) || parseFloat(data.comision_repartidor) || 0,
+            comision_ayudante: parseFloat(data.comision_ayudante) || parseFloat(data.comision_ayudante) || 0,
+            km: parseFloat(data.km_referencia) || parseFloat(data.km) || 0,
+            factor: 1 // Factor predeterminado: 1
           }).returning('*');
           return result;
         } catch (insertError: any) {
-          // Check if it's a unique constraint violation
           if (insertError.code === '23505' && insertError.constraint === 'logistica_catalogo_destinos_nombre_unique') {
             nombre = `${baseNombre} ${counter}`;
             counter++;
@@ -74,18 +73,43 @@ export class ConfigService {
   }
 
   async updateDestino(id: string, data: any) {
-    const [result] = await this.knex('logistica_catalogo_destinos')
-      .where({ id })
-      .update({
-        nombre: data.destino,
-        comision_chofer: data.comision_chofer,
-        comision_repartidor: data.comision_repartidor,
-        comision_ayudante: data.comision_ayudante,
-        km: data.km_referencia,
+    console.log('[ConfigService] updateDestino called with id:', id, 'data:', data);
+    
+    try {
+      const updateData: any = {
         updated_at: new Date()
-      })
-      .returning('*');
-    return result;
+      };
+      
+      // Manejar nombre/destino
+      if (data.nombre !== undefined) {
+        updateData.nombre = String(data.nombre);
+      } else if (data.destino !== undefined) {
+        updateData.nombre = String(data.destino);
+      }
+      
+      // Manejar comisiones (convertir a string para la BD)
+      if (data.comision_chofer !== undefined) updateData.comision_chofer = String(data.comision_chofer);
+      if (data.comision_repartidor !== undefined) updateData.comision_repartidor = String(data.comision_repartidor);
+      if (data.comision_ayudante !== undefined) updateData.comision_ayudante = String(data.comision_ayudante);
+      if (data.km_referencia !== undefined) updateData.km = String(data.km_referencia);
+      if (data.km !== undefined) updateData.km = String(data.km);
+      
+      // Manejar factor
+      if (data.factor !== undefined) updateData.factor = String(data.factor);
+      
+      console.log('[ConfigService] updateData to send:', updateData);
+      
+      const [result] = await this.knex('logistica_catalogo_destinos')
+        .where({ id })
+        .update(updateData)
+        .returning('*');
+      
+      console.log('[ConfigService] updateDestino result:', result);
+      return result;
+    } catch (error) {
+      console.error('[ConfigService] updateDestino error:', error);
+      throw error;
+    }
   }
 
   async deleteDestino(id: string) {

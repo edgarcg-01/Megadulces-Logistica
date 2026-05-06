@@ -1,3 +1,6 @@
+# Docker Compose para PRODUCCIÓN únicamente
+# Para desarrollo local, usa PostgreSQL instalado localmente
+# Ver apps/logistica-api/.env.example para configuración de desarrollo local
 version: '3.8'
 
 services:

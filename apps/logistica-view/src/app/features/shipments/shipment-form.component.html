@@ -134,20 +134,15 @@
 
             <!-- Km -->
             <div class="col-span-1 flex flex-col gap-1">
-              <label for="km" class="text-label mb-1">Km a Recorrer</label>
-              <p-inputNumber formControlName="km" id="km" [min]="0" [useGrouping]="false" styleClass="w-full" />
-              @if (shipmentForm.controls['km'].invalid && (shipmentForm.controls['km'].touched || submitAttempted())) {
-                <small class="text-xs text-red-500">Ingresa los km (>= 0).</small>
-              }
+              <label for="km" class="text-label mb-1">Km a Recorrer (Calculado)</label>
+              <p-inputNumber formControlName="km" id="km" [min]="0" [useGrouping]="false" styleClass="w-full" [disabled]="true" />
             </div>
 
             <!-- Flete -->
             <div class="col-span-1 flex flex-col gap-1">
-              <label for="flete" class="text-label mb-1">Flete ($)</label>
-              <p-inputNumber formControlName="flete" id="flete" [min]="0" mode="currency" currency="MXN" locale="es-MX" [minFractionDigits]="2" [maxFractionDigits]="2" styleClass="w-full" [ngClass]="{'ng-invalid ng-dirty': isInvalid('flete')}" />
-              @if (shipmentForm.controls['flete'].invalid && (shipmentForm.controls['flete'].touched || submitAttempted())) {
-                <small class="text-xs text-red-500">Ingresa el flete (>= 0).</small>
-              }
+              <label for="flete" class="text-label mb-1">Flete ($) - Calculado automáticamente</label>
+              <p-inputNumber formControlName="flete" id="flete" [min]="0" mode="currency" currency="MXN" locale="es-MX" [minFractionDigits]="2" [maxFractionDigits]="2" styleClass="w-full" [disabled]="true" />
+              <small class="text-xs text-content-muted">Factor aplicado: {{ factorAplicado }} (km {{ (shipmentForm.get('km')?.value || 0) / 2 }} ida)</small>
             </div>
 
             <!-- Cajas -->
